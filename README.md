@@ -183,25 +183,40 @@ This repository includes a standalone interactive portfolio (`portfolio.html`). 
 
 ```text
 .
-├── models/
-│   ├── simple_gnn.py          # Architecture 1: Simple message passing baseline
-│   ├── gcn_model.py           # Architecture 2: Graph Convolutional Network
-│   ├── temporal_gat.py        # Architecture 3: Spatio-Temporal Graph Attention Network
-│   ├── sheaf_model.py         # Architecture 4: Sheaf Neural Network baseline
-│   ├── sheaf_connection.py    # Architecture 5: Sheaf-Connection Neural Network (best)
+├── models/                    # Core PyTorch Neural Network Architectures
+│   ├── simple_gnn.py          # Baseline 1: Standard message passing Mean-aggregation (Homophily)
+│   ├── gcn_model.py           # Baseline 2: Graph Convolutional Network (Spectral filtering)
+│   ├── temporal_gat.py        # Baseline 3: Spatio-Temporal Graph Attention Network
+│   ├── sheaf_model.py         # Baseline 4: Sheaf Neural Network (Topological Graph Learning)
+│   ├── sheaf_connection.py    # 🏆 Winner: Sheaf-Connection NN (Learnable 2D Rotation Restriction Maps)
+│   └── model_factory.py       # Centralized factory pattern for dynamic model initialization
 │
-├── tools/                     # Utility scripts and operational tools
-├── trainers/
-│   └── trainer_weekly.py      # Temporal sequence builder, temporal lag parsing
+├── utils/                     # Data Engineering & Preprocessing Pipeline
+│   ├── buoc1taoedge.py        # Step 1: Sub-national spatial network generation (Queen Contiguity + KNN=6)
+│   ├── buoc2taofeature.py     # Step 2: Temporal alignment & extraction of 14 epidemiologic/climate features
+│   ├── buoc3_scale_features.py# Step 3: Outlier transformation (log1p) and Z-score Standardization
+│   ├── buoc4_check_scaled.py  # Step 4: Strict boolean masking & PyTorch tensor assertions
+│   └── check.py               # Data integrity hash checking utilities
 │
-├── utils/
-│   ├── buoc1taoedge.py        # Graph edge construction (Queen contiguity, KNN=6, WGS84)
-│   ├── buoc2taofeature.py     # Feature + label engineering, time-series deduplication
-│   ├── buoc3_scale.py         # Standard Scaler, log1p transform (Z-score)
-│   ├── buoc4_check_scaled.py  # Sanity checks for graph structure masks
+├── trainers/                  # Training Loops & Iteration Mechanics
+│   └── trainer_weekly.py      # Autoregressive sequence builder parsing temporal lag features
 │
-├── visualizations/            # ➔ Dashboard, Mapbox/Plotly visualizations, and rendering exports
-├── run_global_gat.py          # Main entry point: epoch iteration, Huber loss, metrics
+├── tools/                     # MLOps, Sanity Checks, Evaluation & Plotting
+│   ├── run_benchmark.py       # Automated execution of 5-architecture continuous benchmarking
+│   ├── check_leakage.py       # Hard-stops if test-data temporal leakage is detected in early-stopping
+│   ├── check_masks.py         # Validates strict index isolation across train/val/test temporal boundaries
+│   ├── permutation_test.py    # Analyzes feature significance via random permutation breakdown
+│   ├── export_dashboard.py    # PyArrow Parquet/HTML offline exporter for big data predictions
+│   ├── generate_comparison_table.py # Scripts auto-generating latex/markdown metric tables
+│   └── [20+ other scripts]    # Dataset statistical reports, PCA convergence plots, and diagnostic tools
+│
+├── visualizations/            # Deployment & Interactive Geographical Dashboards
+│   ├── dashboard_chinhthuc.html # Giant 329MB offline Mapbox/Plotly full-country interactive dashboard 
+│   ├── parquet/               # Zstd compressed Hive-partitioned predictions (node_predictions_ds)
+│   └── geo/                   # GeoJSON WGS84 geographic shapes for the 5,564 municipalities
+│
+├── run_global_gat.py          # ⚙️ MAIN ENTRY POINT: epoch iteration, Huber loss optimization, evaluations
+├── extract_reports.py         # Utility for PDF/Docx documentation conversion
 ├── portfolio.html             # ➔ INTERACTIVE RESEARCH PORTFOLIO (Open in browser)
 └── README.md                  # This documentation
 ```
