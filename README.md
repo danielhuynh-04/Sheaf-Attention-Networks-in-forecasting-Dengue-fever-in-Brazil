@@ -1,153 +1,478 @@
-<h1 align="center">🦟 Tận Dụng Sức Mạnh Đại Số Topo Trong Dự Báo Sự Bùng Phát Sốt Xuất Huyết Bằng Sheaf Attention Networks</h1>
+# 🦟 Sheaf Attention Networks for Dengue Outbreak Forecasting in Brazil
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
-  <img src="https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white" alt="PyTorch">
-  <img src="https://img.shields.io/badge/Status-Research_Project-success?style=for-the-badge" alt="Status">
-  <img src="https://img.shields.io/badge/Topology-GNN-blueviolet?style=for-the-badge" alt="Topology">
+  <img src="https://img.shields.io/badge/Python-3.10-3776AB?style=for-the-badge&logo=python&logoColor=white">
+  <img src="https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white">
+  <img src="https://img.shields.io/badge/PyTorch_Geometric-2C2D72?style=for-the-badge&logo=pyg&logoColor=white">
+  <img src="https://img.shields.io/badge/Status-Published-success?style=for-the-badge">
+  <img src="https://img.shields.io/badge/Kaggle-Published-20BEFF?style=for-the-badge&logo=kaggle&logoColor=white">
+  <img src="https://img.shields.io/badge/University-Funded_Research-blueviolet?style=for-the-badge">
+</p>
+
+<p align="center">
+  <strong>Official University Student Research Project · Ho Chi Minh City Open University · Project Code 594</strong><br>
+  Student Principal Investigator: Huynh Le Thanh Hai · Budget: VND 5,000,000 · Team: 3 members<br>
+  Validated by physician at Hospital for Tropical Diseases · Published on Kaggle (100+ views, 10+ downloads)
 </p>
 
 ---
 
-## 📖 Bối Cảnh Nghiên Cứu (Research Overview)
+## 🏆 Key Results at a Glance
 
-Nghiên cứu khoa học này đề xuất một **hệ khung dự báo không gian - thời gian (spatiotemporal framework)** ở cấp độ đô thị (municipality) để theo dõi dịch sốt xuất huyết tại Brazil. Thay vì các mô hình Time-Series cổ điển, dự án tiên phong khai thác **Học Đồ Thị Topo (Topological Graph Learning)** để xử lý những cản trở cực kỳ phức tạp về địa lý và thời tiết.
+| Model Architecture | R² (Test 2023–2024) | Mean Absolute Error (log) | Area Under Receiver Operating Characteristic Curve |
+|---|:---:|:---:|:---:|
+| Simple Graph Neural Network (Baseline) | — | — | — |
+| Graph Convolutional Network | — | — | — |
+| Spatio-Temporal Graph Attention Network | — | — | — |
+| Sheaf Neural Network (Baseline Topology) | — | — | — |
+| **🏆 Sheaf-Connection Neural Network** | **0.966** | **0.042** | **0.999** |
 
-Dữ liệu lịch sử khổng lồ bao trọn giai đoạn **2010–2024**, hợp nhất 14 đặc trưng đa nguồn (dịch tễ, mức độ mưa, biến động nhiệt độ, phân luồng dân số). Cấu trúc dữ liệu liên tục được ánh xạ thành các **Weekly Graph Snapshots (Bức tranh đồ thị hàng tuần)**. Nhãn dự báo trải qua biến đổi cấu trúc $log1p$ nhằm triệt tiêu tối đa sự sai lệch phân phối (distribution skew) trước khi dùng hàm mất mát tối ưu Huber Loss.
-
----
-
-## 🔬 Benchmark Lõi: 5 Thể Hệ GNN (The Five Core GNN Variants)
-
-Dự án đánh giá độ hiệu quả vượt trội (benchmark) thông qua **5 kiến trúc mạng học sâu** từ cơ bản đến nâng cao. Mỗi kiến trúc đảm nhiệm năng lực phân giải hình học đồ thị khác nhau.
-
-### 1. Simple GNN (Baseline Spatial)
-Mô hình cơ bản nhất, dùng Message Passing thông thường. Hoạt động trên lý thuyết quy tụ tối giản, giả định dịch lây lan theo đồ thị đồng chất không có vật cản. 
-`File: models/simple_gnn.py | Arg: --model gnn`
-
-### 2. Graph Convolutional Networks (GCN)
-Kế thừa học thuyết **Homophily** (Đồng chất). GCN áp dụng phân tích vi phân dải phổ (spectral filtering).
-Nó coi mức độ đe dọa lây nhiễm từ Đô thị A lên các hàng xóm là **tuyệt đối như nhau**.
-`File: models/gcn_model.py | Arg: --model gcn`
-
-```mermaid
-graph TD
-    A(("Điểm Dịch A")) -- "Phân tán đều 1/N" --> B(("Khu vực B"))
-    A -- "Phân tán đều 1/N" --> C(("Khu vực C"))
-    style A fill:#e53935,color:#fff,stroke:#b71c1c;
-    style B fill:#ef5350,color:#fff;
-    style C fill:#ef5350,color:#fff;
-```
-
-### 3. Spatial-Temporal Graph Attention Networks (ST-GAT)
-Đột phá với hệ thống **Self-Attention**. ST-GAT liên tục quan sát chuỗi đồ thị thời gian thực để học ra cơ chế lây lan ưu tiên thông qua hệ số $\alpha$.
-`File: models/temporal_gat.py | Arg: --model gat`
-
-```mermaid
-graph TD
-    A(("Ổ Dịch Lõi")) == "Trọng số Attention α=0.85" ==> B(("Giao thương mạnh"))
-    A -. "Trọng số Attention α=0.15" .-> C(("Vùng cách ly tự nhiên"))
-    style A fill:#43a047,color:#fff,stroke:#1b5e20;
-    style B fill:#66bb6a,color:#fff;
-    style C fill:#c8e6c9,color:#000;
-```
-
-### 4. Nền tảng Topological Sheaf (Sheaf Baseline) & Nhánh 5. Sheaf Connection (Sheaf_Conn)
-Bước nhảy vào kỷ nguyên Đại Số Topo học (Algebraic Topology). Rũ bỏ giả định Homophily, mạng lưới đồ thị dịch tễ bị dị cấu trúc mạnh (Heterophily) do cản trở địa lý, lưu lượng di chuyển... Mô hình tạo ra các **Vector Spaces** cho từng đỉnh, ánh xạ lên cạnh qua toán tử Sheaf Laplacian độc quyền. `Arg: --model sheaf | --model sheaf_conn`
-
-Tóm tắt sự ưu việt: Học các ma trận **Restriction Maps** $F(A \to e)$ cực kì phức tạp trên từng rìa đồ thị. Nó phản ánh độ trễ **bất đối xứng hoàn hảo**. Đi lại từ A qua B rất dễ khiến dịch lan mạnh, nhưng ngược lại B về A thì không.
-
-```mermaid
-graph LR
-    A(("Vùng A<br>Không gian Va")) -- "Lây lan dị đồng<br>F(A→e)" --> E{"Cạnh Nối e<br>Giao Điểm Không Gian<br>Ve"}
-    B(("Vùng B<br>Không gian Vb")) -- "Lây lan dị đồng<br>F(B→e)" --> E
-    style A fill:#5e35b1,color:#fff,stroke:#311b92,stroke-width:2px;
-    style B fill:#5e35b1,color:#fff,stroke:#311b92,stroke-width:2px;
-    style E fill:#ffb300,color:#fff,shape:hexagon,stroke:#f57f17,stroke-width:3px;
-```
+> **Test period: 2023–2024 (held-out, never seen during training).** Temporal split: Train 2010–2020 / Validation 2021–2022 / Test 2023–2024. Zero data leakage across temporal boundaries.
 
 ---
 
-## 🗃️ Quy Trình Tổng Thể Đặc Chuẩn Data Scientist (End-to-End Pipeline Workflow)
+## 📖 Research Overview
 
-Thiết kế kiến trúc vòng đời mô hình dựa trên quy chuẩn **Data Science chuyên nghiệp**, đi sâu từng module vật lý thực thụ bên trong hệ thống dự án.
+This project proposes a **spatio-temporal graph-based forecasting framework** at municipality level to monitor dengue fever outbreaks across Brazil. Instead of classical time-series models, this research pioneers **Topological Graph Learning** — specifically Sheaf Neural Networks — to capture complex geographic and epidemiological heterogeneity that standard Graph Neural Networks cannot handle.
+
+### The Core Research Question
+
+> *Can Sheaf Neural Networks — which model municipalities as non-homophilic (heterogeneous) nodes via Algebraic Topology — outperform five baseline graph architectures at predicting dengue outbreak weeks on 14 years of real Brazilian epidemiological data?*
+
+### Motivation: Why Graph Learning? Why Sheaf Theory?
+
+Classical graph neural networks assume **homophily** — that connected nodes (municipalities) are similar and should be aggregated uniformly. This assumption **breaks down** for Brazilian dengue epidemiology:
+
+- An urban megacity (São Paulo) and a rural Amazon municipality share a graph edge, but have entirely different outbreak dynamics
+- Disease transmission from city A to neighboring city B is **asymmetric** — commute flows, river routes, and climate gradients create directional spread patterns
+- Standard Laplacian-based aggregation dampens the heterogeneous signals that matter most for outbreak detection
+
+**Sheaf Neural Networks** solve this by assigning each graph edge a learnable **Restriction Map** `F(v→e)` — a function that transforms a node's local feature space before aggregating into the edge space. The **Sheaf-Connection Neural Network** extends this with asymmetric 2D rotation-based Connection Maps, enabling direction-aware, non-symmetric disease transmission modeling.
+
+---
+
+## 📊 Data Engineering Pipeline
 
 ```mermaid
 graph TD
-    subgraph "1. Tiền Xử Lý Dữ Liệu Khổng Lồ (Data Engineering)"
-      A1["Dữ Liệu Thô (Raw): Dịch tễ, Khí hậu, Dân số vùng"]
-      A2["Biến Đổi Cấu Trúc Đồ Thị: Tạo Biên/Cạnh lân cận"]
-      A3["Feature Engineering: Lags Sequence & Scaling MinMax"]
-      A4["Trích Xuất Snapshot: Cắt lát đồ thị Tuần 2010-2024"]
-      A1 --> A2 --> A3 --> A4
-    end
+  subgraph "① Raw Data Collection"
+    A1["SINAN/DATASUS\nDengue Surveillance"]
+    A2["ECMWF ERA5\nClimate Reanalysis"]
+    A3["IBGE Census\nDemographics"]
+    A4["Köppen & Biome\nClassification"]
+  end
 
-    subgraph "2. Động Cơ Học Đồ Thị & Thời Gian (Spatiotemporal Modeling)"
-      B1["Inputs Đồ thị Không-Thời Gian Tuần T"]
-      B2["Lớp Hình Học (Topological Layer): Sheaf/GAT/GCN"]
-      B3["Tuần tự Thời Gian (Temporal Layer): Trích xuất chuỗi Lags"]
-      B4["Lạc Hướng Học: Huber Loss & Chuẩn Log1p"]
-      B5["Thiết Lập Backpropagation & Early Stopping"]
-      
-      A4 --> B1 --> B2 --> B3 --> B4 --> B5
-      B5 -. "Gradient Descents" .-> B2
-    end
-    
-    subgraph "3. Bias Error Correction & Triển Khai Đo Lường (Evaluation)"
-      C1["Ma trận Sinh Dự Báo Nút (Node Predictions)"]
-      C2["Khôi Phục Thực Tế (Bias-Correction): Duan Smearing & Sigma^2"]
-      C3["Áo Động Hồi Quy (Regression): SMAPE, RMSE, Trimming R2"]
-      C4["Khuếch Đại Phân Lớp (Classification Thresholds): ROC-AUC"]
-      C5["Trích Dữ Liệu Dashboard & Visualizations (Export CSV/JSON)"]
-      
-      B5 --> C1 --> C2 --> C3 --> C4 --> C5
-    end
-    
-    %% Style adjustments
-    style A1 fill:#37474f,color:#fff
-    style B2 fill:#1565c0,color:#fff
-    style C2 fill:#e65100,color:#fff
-    style C5 fill:#00695c,color:#fff
+  subgraph "② Feature Engineering — 14 Features per Municipality per Week"
+    B1["Epidemiological:\nIncidence rate, lag-1 to lag-4 weeks"]
+    B2["Climate:\nTemp min/max/mean, Precipitation, Humidity, NDVI"]
+    B3["Demographic:\nPopulation density, Urbanization index"]
+    B4["Geographic:\nBiome class, Köppen climate zone"]
+    A1 --> B1 & A2 --> B2 & A3 --> B3 & A4 --> B4
+  end
+
+  subgraph "③ Graph Construction"
+    C1["5,564 Nodes\n(Municipalities, 7-digit IBGE geocode)"]
+    C2["16,382 Edges via k-Nearest Neighbours k=6\nunder WGS84 geographic coordinate system"]
+    C3["PyTorch Geometric edge_index format\nAutomated symmetry & connectivity validation"]
+    B1 & B2 & B3 & B4 --> C1 --> C2 --> C3
+  end
+
+  subgraph "④ Preprocessing & Serialization"
+    D1["log1p label transform\n(distribution skew suppression)"]
+    D2["Standard Scaler\n(node feature normalization)"]
+    D3["Weekly .pt snapshots\n(2010–2024, with train/val/test boolean masks)"]
+    C3 --> D1 --> D2 --> D3
+  end
+
+  style A1 fill:#1a1a2e,color:#aaa,stroke:#444
+  style C2 fill:#162447,color:#fff,stroke:#1f4068
+  style D3 fill:#1b262c,color:#00d4aa,stroke:#00d4aa
 ```
 
-<br>
+### Data Sources
 
-## 🚀 Khởi Chạy Dự Án
+| Source | Content | Coverage |
+|---|---|---|
+| SINAN/DATASUS | Dengue weekly case counts | Brazil, 2010–2024 |
+| ECMWF ERA5 | Temperature (min/max/mean), Precipitation, Humidity, NDVI | 5,564 municipalities, weekly |
+| IBGE Census | Population density, Urbanization index | 5,564 municipalities |
+| Köppen Classification | Climate zone per municipality | Full Brazil |
+| Biome Classification | Amazon, Cerrado, Caatinga, Atlantic Forest, Pantanal, Pampa | Full Brazil |
 
-### 💻 Setup Môi Trường
-```bash
-git clone https://github.com/danielhuynh-04/Sheaf-Attention-Networks-in-forecasting-Dengue-fever-in-Brazil.git
-cd Sheaf-Attention-Networks-in-forecasting-Dengue-fever-in-Brazil
-pip install -r requirements.txt 
+---
+
+## 🔬 The Five Graph Neural Network Architectures Benchmarked
+
+### Architecture 1 — Simple Graph Neural Network
+
 ```
-*(Nếu thiết lập bị thiếu, yêu cầu chuẩn: `torch`, `pytorch-geometric`, `pandas`, `numpy`, `scikit-learn`)*
+MessagePassing (aggr='mean') → Linear → ReLU → Dropout → Linear → ReLU → Dropout → Output
+```
 
-### 🧠 Vận Hành Quá Trình Training Kép (Dual Run Protocol)
-Kiến trúc khởi xướng qua file trung tâm định tuyến `run_global_gat.py`:
+Baseline architecture using standard mean-aggregation message passing. Assumes **perfect homophily**: all neighbors contribute equally with no directional awareness. This architecture processes two `SimpleConv` layers followed by a linear output head.
+
+**Limitation:** Cannot capture heterogeneous transmission dynamics between municipalities of different sizes, climates, or urbanization levels.
+
+---
+
+### Architecture 2 — Graph Convolutional Network
+
+```
+GCNConv (spectral) → ReLU → Dropout → GCNConv → ReLU → Dropout → Linear → Output
+```
+
+Applies spectral filtering via the **symmetric normalized Laplacian** `D^{-1/2} A D^{-1/2}`. Aggregation weights are proportional to node degree — larger-degree municipalities contribute less per edge. Still assumes homophily.
+
+**Limitation:** Symmetric aggregation cannot represent asymmetric disease spread; rural-urban transmission asymmetry is invisible to this model.
+
+---
+
+### Architecture 3 — Spatio-Temporal Graph Attention Network
+
+```
+Temporal Encoder:
+  Lag sequence [N, T, F_lag]
+    → GRU (Gated Recurrent Unit, hidden=64)
+    → Multi-Head Attention (4 heads, self-attention over time steps)
+    → Projection [N, t_hidden]
+
+Spatial Encoder:
+  [Node features ‖ temporal embedding] [N, F + t_hidden]
+    → GATConv Layer 1 (4 heads, concat=True) → [N, 128×4]
+    → GATConv Layer 2 (4 heads, concat=False) → [N, 128]
+    → Linear → [N, 1]
+```
+
+Introduces **adaptive spatial attention** (α_ij per edge, learned) combined with **temporal sequential modeling** (Gated Recurrent Unit). Each municipality dynamically weights the influence of its neighbors based on current epidemic state.
+
+**Hyperparameters:** `hidden=128, heads=(4,4), lr=3e-4, weight_decay=1e-4, dropout=0.2`
+
+---
+
+### Architecture 4 — Sheaf Neural Network (Topology Baseline)
+
+Replaces the standard adjacency-based Laplacian with the **Sheaf Laplacian** `L_F`. For each directed edge `(u, v)`, a **Restriction Map** `F(u→e)` maps the node's feature vector into the edge's stalk space:
+
+```
+L_F = B^T diag(F_e^T F_e) B
+```
+
+where `B` is the signed incidence matrix and `F_e` are the per-edge restriction maps. This allows each edge to define its own local geometry — breaking the homophily assumption for the first time in this benchmark.
+
+---
+
+### Architecture 5 — Sheaf-Connection Neural Network 🏆 Best Model
+
+```
+Input [N, F]
+  → Linear projection → [N, H]  (input node embedding)
+  + Temporal mean-pool → LazyLinear → [N, H]  (temporal context fusion)
+  → ReLU
+
+For each directed edge (src → dst):
+  Edge Multi-Layer Perceptron:
+    [h_src ‖ h_dst ‖ |h_src - h_dst|] → [E, 3H]
+    → Linear(3H → H) → ReLU → Dropout → Linear(H → S)
+    → S rotation angles θ per stalk  [E, S]
+
+  Rotation matrix per stalk (2×2):
+    R(θ) = [[cos θ, -sin θ],
+             [sin θ,  cos θ]]
+
+  Restriction map (Connection Map):
+    mapped_src = einsum("esab,esb→esa", R, h_src_stalk)  [E, S, 2]
+
+  Disagreement signal:
+    diff = mapped_src - h_dst_stalk
+
+  Aggregation (minimize sheaf disagreement):
+    agg_dst.index_add_(0, dst, -diff)   ← reduce to destination
+    agg_src.index_add_(0, src, +diff)   ← reduce to source
+    agg = 0.5 * (agg_dst + agg_src)    → [N, H]
+
+  Residual + Layer Normalization:
+    h = LayerNorm(h + Dropout(agg))
+    h = ReLU(h)
+
+  Output head:
+    → Linear(H → H) → ReLU → Dropout → Linear(H → 1)
+```
+
+**Key insight:** The rotation-based Connection Map `R(θ)` for each directed edge is **asymmetric** — disease flowing from city A to city B uses a different rotation than B to A. This captures the directional nature of dengue spread along commute routes, river valleys, and climate gradients. The rotation angle θ is learned end-to-end from epidemiological data.
+
+**Hyperparameters:** `hidden=64, stalk_dim=2, num_stalks=32, lr=1e-4, weight_decay=5e-4, dropout=0.2`
+
+---
+
+## 🔄 Business Process Model — Research Workflow (BPMN)
+
+```mermaid
+flowchart LR
+  subgraph START ["🚀 Project Initiation"]
+    direction TB
+    S1["Write Research Proposal\n(literature review, gap, methodology)"]
+    S2["Submit to University\nGraduate Committee"]
+    S3["Secure VND 5M Funding\nProject Code 594"]
+    S1 --> S2 --> S3
+  end
+
+  subgraph DATA ["📦 Data Engineering Lane"]
+    direction TB
+    D1["Collect raw data\nSINAN · ECMWF · IBGE · Köppen"]
+    D2["Engineer 14 features\nper municipality per week"]
+    D3["Build spatial graph\n5,564 nodes · 16,382 edges\nk-NN WGS84"]
+    D4["Serialize weekly snapshots\nlog1p + Standard Scaler\n+ boolean masks → .pt"]
+    D1 --> D2 --> D3 --> D4
+  end
+
+  subgraph MODEL ["🤖 Model Development Lane"]
+    direction TB
+    M1["Implement 5 architectures\nGNN · GCN · ST-GAT · Sheaf · Sheaf-Conn"]
+    M2["Train with AdamW\n+ Huber Loss δ=1.2\n+ Gradient Clip max_norm=1.0"]
+    M3["Early Stopping\npatience=30 on Validation Huber Loss"]
+    M4["Checkpoint best model\n→ .pt file"]
+    M1 --> M2 --> M3 --> M4
+  end
+
+  subgraph EVAL ["📊 Evaluation & Validation Lane"]
+    direction TB
+    E1["Leakage scan\n+ Permutation testing"]
+    E2["Compute metrics:\nMAE · RMSE · SMAPE · R²\nTrimmed R² · ROC-AUC · PR-AUC"]
+    E3["Bias-correction:\nDuan Smearing Estimator\n+ 99.9th-pct headroom clamp"]
+    E4["Hospital physician\nvalidation of methodology"]
+    E1 --> E2 --> E3 --> E4
+  end
+
+  subgraph PUB ["📢 Dissemination"]
+    direction TB
+    P1["Full report submitted\nto HCMCOU Library"]
+    P2["Code published on Kaggle\n100+ views · 10+ downloads"]
+    P3["Open source\nGitHub repository"]
+    P1 --> P2 --> P3
+  end
+
+  S3 --> D1
+  D4 --> M1
+  M4 --> E1
+  E4 --> P1
+
+  style START fill:#1a1a2e,stroke:#4f7cff,color:#fff
+  style DATA fill:#162447,stroke:#00d4aa,color:#fff
+  style MODEL fill:#1b0033,stroke:#7c5cfc,color:#fff
+  style EVAL fill:#1a2e1a,stroke:#ffd166,color:#fff
+  style PUB fill:#2e1a1a,stroke:#f06292,color:#fff
+```
+
+---
+
+## ⚙️ Training & Optimization
+
+### Setup
+
+```python
+optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=wd)
+loss_fn   = nn.HuberLoss(delta=1.2)   # outlier-robust regression
+
+# Gradient clipping — stabilizes Sheaf Laplacian backpropagation
+torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+
+# Early stopping
+patience = 30   # epochs without improvement on validation loss
+```
+
+### Temporal Split (Leakage-Free)
+
+```
+Train:      2010 – 2020  (weekly snapshots, ~550 weeks)
+Validation: 2021 – 2022  (104 weeks)
+Test:       2023 – 2024  (104 weeks, NEVER seen during training or early-stopping)
+```
+
+### Bias-Correction at Inference
+
+Because labels are log1p-transformed, raw model output `ŷ_log` must be back-transformed to real case counts. Naive `expm1(ŷ_log)` is biased. This project applies:
+
+**Primary — Duan Smearing Estimator:**
+```python
+smear = np.mean(np.exp(residuals_train))    # E[e^ε] from training residuals
+y_real = torch.exp(y_log) * smear - 1.0
+```
+
+**Fallback — σ² Shift:**
+```python
+sigma2 = np.var(residuals_train, ddof=1)
+y_real = torch.expm1(y_log + 0.5 * sigma2)
+```
+
+**Headroom clamp:** predictions capped at the 99.9th percentile of training real values to suppress extreme outlier forecasts.
+
+---
+
+## 📐 Evaluation Suite
+
+| Metric | Domain | Notes |
+|---|---|---|
+| Mean Absolute Error | Regression | Computed on log-space predictions |
+| Root Mean Squared Error | Regression | Outlier-sensitive |
+| Symmetric Mean Absolute Percentage Error | Regression | Scale-independent |
+| R² (Coefficient of Determination) | Regression | Overall variance explained |
+| Trimmed R² (1st–99th percentile) | Regression | Outlier-robust R² on trimmed subset |
+| Area Under Receiver Operating Characteristic Curve | Classification | Outbreak-week binary detection |
+| Precision-Recall Area Under Curve | Classification | Handles class imbalance well |
+
+> ROC-AUC and Precision-Recall AUC are derived from regression scores using the **90th percentile of training incidence** as the outbreak threshold — no classification head required.
+
+---
+
+## 🗂️ Repository Structure
+
+```
+.
+├── models/
+│   ├── simple_gnn.py          # Architecture 1: Simple message passing baseline
+│   ├── gcn_model.py           # Architecture 2: Graph Convolutional Network
+│   ├── temporal_gat.py        # Architecture 3: Spatio-Temporal Graph Attention Network
+│   ├── sheaf_model.py         # Architecture 4: Sheaf Neural Network baseline
+│   ├── sheaf_connection.py    # Architecture 5: Sheaf-Connection Neural Network (best)
+│   └── model_factory.py       # Unified model builder
+│
+├── trainers/
+│   └── trainer_weekly.py      # Temporal sequence builder, model factory helpers
+│
+├── utils/
+│   ├── buoc1taoedge.py        # Step 1: Graph edge construction (k-NN, WGS84)
+│   ├── buoc2taofeature_label.py  # Step 2: Feature + label engineering
+│   ├── buoc3_scale_features.py   # Step 3: Standard Scaler, log1p transform
+│   ├── buoc4_check_scaled.py     # Step 4: Validation of scaled output
+│   └── check.py               # Sanity checks for graph structure
+│
+├── run_global_gat.py          # Main entry point: training, evaluation, export
+├── README.md                  # This file
+└── .gitignore                 # Excludes large data artifacts and checkpoints
+```
+
+---
+
+## 🚀 Quick Start
+
+### 1. Clone & Install
 
 ```bash
-# Huấn luyện Sheaf_Connection tiên tiến nhất
+git clone https://github.com/danielhuynh-04/Sheaf-Attention-Networks-in-forecasting-Dengue-fever-in-Brazil.
+
+cd Sheaf-Attention-Networks-in-forecasting-Dengue-fever-in-Brazil.
+
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+pip install torch-geometric pandas numpy scikit-learn
+```
+
+> **Note:** Dataset files (weekly `.pt` snapshots, edge index, checkpoints) are excluded from this repository via `.gitignore` due to size. Contact the author for data access or reproduce via the utility scripts in `utils/`.
+
+### 2. Train a Model
+
+```bash
+# Train the best model (Sheaf-Connection Neural Network)
 python run_global_gat.py --model sheaf_conn --epochs 200
 
-# So sánh tương đương với Baseline GCN
-python run_global_gat.py --model gcn --epochs 200
+# Train and compare Spatio-Temporal Graph Attention Network
+python run_global_gat.py --model gat --epochs 200
+
+# All available models:
+# gnn | gcn | gat | sheaf | sheaf_conn
 ```
 
-> **Lệnh Tuân thủ CLI:**
-> - `--model`: Cơ sở so khớp `[gnn, gcn, gat, sheaf, sheaf_conn]`
-> - `--epochs`: Giới hạn hội tụ.
-> - `--eval_only`: Nhúng giá trị `1` sẽ skip qua trình training, lấy checkpoint tĩnh hội tụ `.pt`.
-> - `--export_predictions`: Nhúng `1` giải phóng ma trận dữ liệu phân tích từng micro-vùng làm ảnh (đầu ra `Visualizations`).
+### 3. Evaluate Only (load saved checkpoint)
 
-<br>
+```bash
+python run_global_gat.py --model sheaf_conn --eval_only 1
+```
 
-## 📊 Phương Pháp Đánh Giá Mở Rộng
-Báo cáo mô hình không chỉ giới hạn tại phương sai Regression.
-Dự án được đánh giá cực nghiêm ngặt:
-- **Regression:** `MAE`, `RMSE`, `SMAPE`, đặc biệt là sự tương quan `R2_log` cắt tỉa các Outlier phân vị 99%.
-- **Classification Projection:** Điểm chuẩn bùng nổ ROC-AUC và PR-AUC biên dịch chéo từ hồi quy thực tế.
+### 4. Export Node-Level Predictions (for dashboard)
 
-Tất cả Dashboard, Checkpoints rễ sẽ được đổ vào `data/interim/` sau mỗi lần Run thành công.
+```bash
+python run_global_gat.py --model sheaf_conn --eval_only 1 --export_predictions 1
+```
+
+### CLI Arguments
+
+| Argument | Options | Default | Description |
+|---|---|---|---|
+| `--model` | `gnn, gcn, gat, sheaf, sheaf_conn` | `gat` | Architecture to train |
+| `--epochs` | integer | `200` | Maximum training epochs |
+| `--eval_only` | `0, 1` | `0` | Skip training, load best checkpoint |
+| `--export_predictions` | `0, 1` | `0` | Export per-node predictions to CSV |
+
+### Outputs
+
+| File | Location | Description |
+|---|---|---|
+| Best model checkpoint | `checkpoints/<model>_global_best.pt` | Model state dict at best validation loss |
+| Weekly report | `data/interim/<model>_global_weekly_report.csv` | Per-week evaluation metrics |
+| Summary | `data/interim/<model>_global_summary.json` | Aggregated metrics for all splits |
+| Epoch log | `data/interim/<model>_epoch_log.csv` | Training convergence log |
+| Node predictions | `visualizations/data/<model>/node_predictions_<model>.csv` | Per-municipality predictions |
 
 ---
-> 💡 **Notice from the Author**: Các phân vùng chứa Dataset khổng lồ thô bạo (Data, Visualizations, Checkpoints) cũng như bản báo cáo NCKH toàn vẹn (.docx) đã được bảo vệ mã hóa ẩn danh `.gitignore` khởi cục bộ trong Repository Open-Source này để tăng tính cơ động.
+
+## 🌐 Spatio-Temporal Dashboard (Capstone Extension)
+
+A nationwide interactive dashboard was built as a capstone thesis (Jul–Sep 2025) extending this research to all 5,564 Brazilian municipalities with 16,382 graph edges:
+
+- **Choropleth outbreak-risk map** (Plotly Scattermapbox) — municipality-level risk visualization
+- **Forecast error heatmap** (Plotly Densitymapbox) — spatial distribution of model uncertainty
+- **Temporal trend charts** — weekly predicted vs. actual incidence per region
+- **Zero-server architecture** — fully offline (Plotly + Mapbox GL JS + Vanilla JavaScript, no Flask backend)
+- **Data exchange** — model outputs via Apache Parquet → JSON; GeoJSON/Shapefile boundary overlays
+
+> Capstone thesis submitted to Ho Chi Minh City Open University Library and registered with the HCMC Department of Science and Technology.
+
+---
+
+## 📈 Research Context & Validation
+
+This project was conducted as an **Official University Student Research Project** at Ho Chi Minh City Open University:
+
+- **Project Code:** 594
+- **Funding:** VND 5,000,000 (university research scholarship)
+- **Team:** 3 members, Student Principal Investigator: Huynh Le Thanh Hai
+- **Clinical Validation:** Research methodology reviewed and validated with a **physician at the Hospital for Tropical Diseases (Bệnh Viện Bệnh Nhiệt Đới)**
+- **Proposed Impact:** Framework designed to be transferable to Vietnam's national dengue surveillance system
+- **Publication:** Full research report submitted to Ho Chi Minh City Open University Library; code and reproducible implementation published on [Kaggle](https://kaggle.com/lthanhhihunh) — **100+ views, 10+ downloads**
+
+---
+
+## 🛠️ Technology Stack
+
+| Category | Tools |
+|---|---|
+| Core Language | Python 3.10, SQL, JavaScript |
+| Deep Learning | PyTorch, PyTorch Geometric, torch.nn |
+| Graph Learning | Graph Convolutional Network (GCNConv), Graph Attention Network (GATConv), Sheaf Laplacian, custom Restriction Maps |
+| Temporal Modeling | Gated Recurrent Unit (GRU), Multi-Head Attention |
+| Optimization | AdamW, Huber Loss, Gradient Clipping, Early Stopping, Duan Smearing |
+| Feature Engineering | Pandas, NumPy, Scikit-learn, Standard Scaler, log1p transform |
+| Geospatial | GeoJSON, Shapefile, WGS84 coordinate system, IBGE geocodes |
+| Visualization | Plotly Express, Mapbox GL JS, Matplotlib, Apache Parquet |
+| Data Sources | SINAN/DATASUS, ECMWF ERA5, IBGE Census, Köppen zones |
+
+---
+
+## 👤 Author
+
+**Huynh Le Thanh Hai**
+Final-year Computer Science student, Ho Chi Minh City Open University (High-Quality 100% English Program)
+
+- 📧 Haiworkai@gmail.com
+- 💼 [LinkedIn](https://linkedin.com/in/le-thanh-hai-huynh-8353913a1)
+- 🔬 [Kaggle Publication](https://kaggle.com/lthanhhihunh)
+- 🐱 [GitHub](https://github.com/danielhuynh-04)
+
+---
+
+## 📄 License
+
+This project is open source. Dataset reproduction requires access to SINAN/DATASUS, ECMWF ERA5, and IBGE open data APIs. See individual source licenses.
+
+---
+
+> 💡 **Notice:** Large data artifacts (weekly `.pt` snapshots, model checkpoints, dashboard data), as well as the full research report (`.docx`), are excluded from this repository via `.gitignore` to keep the repository portable and lightweight. The full pipeline can be reproduced using the utility scripts in `utils/` with the raw open data sources listed above.
