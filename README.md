@@ -8,7 +8,7 @@
   <img src="https://img.shields.io/badge/Python-3.10-3776AB?style=for-the-badge&logo=python&logoColor=white">
   <img src="https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white">
   <img src="https://img.shields.io/badge/PyTorch_Geometric-2C2D72?style=for-the-badge&logo=pyg&logoColor=white">
-  <img src="https://img.shields.io/badge/SQL-4479A1?style=for-the-badge&logo=postgresql&logoColor=white">
+  <img src="https://img.shields.io/badge/SQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white">
   <img src="https://img.shields.io/badge/Apache_Parquet-E6822D?style=for-the-badge&logo=apache&logoColor=white">
 </p>
 
@@ -23,7 +23,7 @@ _Student Principal Investigator: **Huynh Le Thanh Hai**_
 | Metric | Winner: Sheaf-Connection NN | Outbreak Classification | Scope & Scale |
 |:---|:---:|:---:|:---|
 | **Test R² Score (2023–2024)** | **0.966** | **ROC-AUC: 0.999** | **14 Years** of Data |
-| **Mean Absolute Error (log-space)** | 0.042 | **PR-AUC: 0.992** | **5,564** Municipalities |
+| **Mean Absolute Error (log-space)** | 0.042 | (Spatial/Temporal Metrics) | **5,564** Municipalities |
 | **Trimmed R² (1st–99th pct)** | Outlier-Robust | Threshold: 90th percentile | **16,382** Graph Edges |
 
 > **Strict Leakage-Free Temporal Split:** Train 2010–2020 / Validation 2021–2022 / Test 2023–2024 (held-out, never seen during training or early stopping).
@@ -95,9 +95,9 @@ graph TD
     A1 --> B1 & A2 --> B2 & A3 --> B3 & A4 --> B4
   end
 
-  subgraph "③ Graph Construction (Queen Contiguity + KNN)"
+  subgraph "③ Graph Construction (Queen Contiguity + k-NN=6)"
     C1["5,564 Nodes\n(Municipalities, 7-digit IBGE geocode)"]
-    C2["16,382 Edges Queen adjacency bounding box\n+ k-Nearest Neighbours k=6 for isolated nodes"]
+    C2["16,382 Edges under WGS84\nQueen adjacency + k-NN=6 for isolated nodes"]
     C3["PyTorch Geometric edge_index format\nAutomated symmetry & zero self-loop validation"]
     B1 & B2 & B3 & B4 --> C1 --> C2 --> C3
   end
@@ -109,9 +109,9 @@ graph TD
     C3 --> D1 --> D2 --> D3
   end
 
-  style A1 fill:#1a1a2e,color:#aaa,stroke:#444
-  style C2 fill:#162447,color:#fff,stroke:#1f4068
-  style D3 fill:#1b262c,color:#00d4aa,stroke:#00d4aa
+  style A1 fill:#003366,color:#fff,stroke:#002244
+  style C2 fill:#336699,color:#fff,stroke:#113355
+  style D3 fill:#6699cc,color:#fff,stroke:#224466
 ```
 
 All datasets derived from the **Mosqlimate Project** (Infodengue–Mosqlimate Sprint/Dengue Challenge) published on Zenodo (DOI: `10.5281/zenodo.13328231`), CC BY 4.0.
@@ -165,10 +165,10 @@ flowchart LR
   D3 --> M1 --> M2 --> M3
   M3 --> E1 --> E2 --> E3
 
-  style START fill:#1a1a2e,stroke:#4f7cff,color:#fff
-  style DATA fill:#162447,stroke:#00d4aa,color:#fff
-  style MODEL fill:#1b0033,stroke:#7c5cfc,color:#fff
-  style EVAL fill:#1a2e1a,stroke:#ffd166,color:#fff
+  style START fill:#336699,stroke:#ffffff,color:#fff
+  style DATA fill:#003366,stroke:#ffffff,color:#fff
+  style MODEL fill:#336699,stroke:#ffffff,color:#fff
+  style EVAL fill:#003366,stroke:#ffffff,color:#fff
 ```
 
 ### Technical Implementation Details
@@ -192,10 +192,10 @@ This repository includes a standalone interactive portfolio (`portfolio.html`). 
 │   └── model_factory.py       # Centralized factory pattern for dynamic model initialization
 │
 ├── utils/                     # Data Engineering & Preprocessing Pipeline
-│   ├── buoc1taoedge.py        # Step 1: Sub-national spatial network generation (Queen Contiguity + KNN=6)
-│   ├── buoc2taofeature.py     # Step 2: Temporal alignment & extraction of 14 epidemiologic/climate features
-│   ├── buoc3_scale_features.py# Step 3: Outlier transformation (log1p) and Z-score Standardization
-│   ├── buoc4_check_scaled.py  # Step 4: Strict boolean masking & PyTorch tensor assertions
+│   ├── step1_build_edges.py   # Step 1: Sub-national spatial network generation (Queen Contiguity + k-NN=6)
+│   ├── step2_build_features.py# Step 2: Temporal alignment & extraction of 14 epidemiologic/climate features
+│   ├── step3_scale_features.py# Step 3: Outlier transformation (log1p) and Z-score Standardization
+│   ├── step4_check_scaled.py  # Step 4: Strict boolean masking & PyTorch tensor assertions
 │   └── check.py               # Data integrity hash checking utilities
 │
 ├── trainers/                  # Training Loops & Iteration Mechanics
@@ -211,7 +211,6 @@ This repository includes a standalone interactive portfolio (`portfolio.html`). 
 │   └── [20+ other scripts]    # Dataset statistical reports, PCA convergence plots, and diagnostic tools
 │
 ├── visualizations/            # Deployment & Interactive Geographical Dashboards
-│   ├── dashboard_chinhthuc.html # Giant 329MB offline Mapbox/Plotly full-country interactive dashboard 
 │   ├── parquet/               # Zstd compressed Hive-partitioned predictions (node_predictions_ds)
 │   └── geo/                   # GeoJSON WGS84 geographic shapes for the 5,564 municipalities
 │
@@ -250,8 +249,8 @@ This repository includes a standalone interactive portfolio (`portfolio.html`). 
 ## 🚀 Quick Start
 
 ```bash
-git clone https://github.com/danielhuynh-04/Sheaf-Attention-Networks-in-forecasting-Dengue-fever-in-Brazil.
-cd Sheaf-Attention-Networks-in-forecasting-Dengue-fever-in-Brazil.
+git clone https://github.com/danielhuynh-04/Sheaf-Attention-Networks-in-forecasting-Dengue-fever-in-Brazil
+cd Sheaf-Attention-Networks-in-forecasting-Dengue-fever-in-Brazil
 
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 pip install torch-geometric pandas numpy scikit-learn pyarrow
