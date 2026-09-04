@@ -177,6 +177,36 @@ flowchart LR
 
 ---
 
+## 🗂️ Repository Structure & Interactive Portfolio
+
+This repository includes a standalone interactive portfolio (`portfolio.html`). Open it your browser to view the project with stunning UI/UX, animations, and deep technical summaries perfectly tuned for HR and Tech Leads.
+
+```text
+.
+├── models/
+│   ├── simple_gnn.py          # Architecture 1: Simple message passing baseline
+│   ├── gcn_model.py           # Architecture 2: Graph Convolutional Network
+│   ├── temporal_gat.py        # Architecture 3: Spatio-Temporal Graph Attention Network
+│   ├── sheaf_model.py         # Architecture 4: Sheaf Neural Network baseline
+│   ├── sheaf_connection.py    # Architecture 5: Sheaf-Connection Neural Network (best)
+│
+├── trainers/
+│   └── trainer_weekly.py      # Temporal sequence builder, temporal lag parsing
+│
+├── utils/
+│   ├── buoc1taoedge.py        # Graph edge construction (Queen contiguity, KNN=6, WGS84)
+│   ├── buoc2taofeature.py     # Feature + label engineering, time-series deduplication
+│   ├── buoc3_scale.py         # Standard Scaler, log1p transform (Z-score)
+│   ├── buoc4_check_scaled.py  # Sanity checks for graph structure masks
+│
+├── run_global_gat.py          # Main entry point: epoch iteration, Huber loss, metrics
+├── export_dashboard.py        # PyArrow Parquet generator & self-contained HTML builder
+├── portfolio.html             # ➔ INTERACTIVE RESEARCH PORTFOLIO (Open in browser)
+└── README.md                  # This documentation
+```
+
+---
+
 ## 🛠️ Full Technology Stack
 
 | Category | Technologies |

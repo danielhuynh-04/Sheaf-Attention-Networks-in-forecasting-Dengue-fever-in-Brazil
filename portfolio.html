@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Huynh Le Thanh Hai — Research Portfolio</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0f1e;
+            --bg2: #0e1529;
+            --bg3: #131c35;
+            --card: #111827;
+            --border: rgba(99, 130, 255, 0.15);
+            --accent: #4f7cff;
+            --accent2: #7c5cfc;
+            --accent3: #00d4aa;
+            --text: #e8eaf6;
+            --muted: #8892b0;
+            --code-bg: #0d1117;
+            --tag-bg: rgba(79, 124, 255, 0.12);
+            --tag-c: #7fa8ff;
+            --green: #00d4aa;
+            --yellow: #ffd166;
+            --pink: #f06292;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* ── scrollbar ── */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 3px;
+        }
+
+        /* ── noise overlay ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+
+        /* ── grid lines ── */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background-image:
+                linear-gradient(rgba(79, 124, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(79, 124, 255, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+        }
+
+        /* ── layout ── */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── HERO ─────────────────────────────────────────────────────────────*/
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            padding: 80px 0 60px;
+        }
+
+        .hero-glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.18;
+            pointer-events: none;
+        }
+
+        .glow-blue {
+            width: 700px;
+            height: 700px;
+            background: #4f7cff;
+            top: -200px;
+            left: -200px;
+        }
+
+        .glow-purple {
+            width: 500px;
+            height: 500px;
+            background: #7c5cfc;
+            bottom: -100px;
+            right: -100px;
+        }
+
+        .glow-teal {
+            width: 400px;
+            height: 400px;
+            background: #00d4aa;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(79, 124, 255, 0.1);
+            border: 1px solid rgba(79, 124, 255, 0.3);
+            border-radius: 100px;
+            padding: 6px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+
+        .badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1)
+            }
+
+            50% {
+                opacity: .4;
+                transform: scale(1.4)
+            }
+        }
+
+        .hero h1 {
+            font-size: clamp(2.4rem, 5vw, 4rem);
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #ffffff 0%, #a8c0ff 50%, #7c5cfc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        .hero-sub {
+            font-size: clamp(1rem, 2vw, 1.25rem);
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .hero-desc {
+            font-size: 1.05rem;
+            color: var(--muted);
+            max-width: 720px;
+            margin-bottom: 40px;
+            line-height: 1.8;
+        }
+
+        .hero-desc strong {
+            color: var(--text);
+        }
+
+        .hero-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 56px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 0 24px rgba(79, 124, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: #3d6bff;
+            transform: translateY(-1px);
+            box-shadow: 0 0 36px rgba(79, 124, 255, 0.5);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        /* stat strip */
+        .stat-strip {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .stat {
+            background: var(--card);
+            padding: 24px 20px;
+            text-align: center;
+        }
+
+        .stat-val {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        /* ── SECTION COMMON ──────────────────────────────────────────────────*/
+        section {
+            padding: 80px 0;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: clamp(1.6rem, 3vw, 2.2rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--text);
+            margin-bottom: 40px;
+        }
+
+        .section-title span {
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* ── TAGS ── */
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 16px 0;
+        }
+
+        .tag {
+            background: var(--tag-bg);
+            color: var(--tag-c);
+            border: 1px solid rgba(79, 124, 255, 0.2);
+            border-radius: 6px;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .tag.green {
+            background: rgba(0, 212, 170, 0.1);
+            color: var(--green);
+            border-color: rgba(0, 212, 170, 0.2);
+        }
+
+        .tag.purple {
+            background: rgba(124, 92, 252, 0.12);
+            color: #b39cff;
+            border-color: rgba(124, 92, 252, 0.25);
+        }
+
+        .tag.yellow {
+            background: rgba(255, 209, 102, 0.1);
+            color: var(--yellow);
+            border-color: rgba(255, 209, 102, 0.2);
+        }
+
+        /* ── PROJECT CARD ───────────────────────────────────────────────────*/
+        .project-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 40px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .project-card:hover {
+            border-color: rgba(79, 124, 255, 0.4);
+            box-shadow: 0 0 60px rgba(79, 124, 255, 0.08);
+        }
+
+        .card-header {
+            padding: 32px 36px 24px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(135deg, rgba(79, 124, 255, 0.05), rgba(124, 92, 252, 0.05));
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-header::after {
+            content: '';
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(79, 124, 255, 0.15), transparent 70%);
+            border-radius: 50%;
+        }
+
+        .project-number {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .project-title {
+            font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.3;
+            margin-bottom: 10px;
+        }
+
+        .project-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 12px;
+        }
+
+        .project-meta span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .card-body {
+            padding: 32px 36px;
+        }
+
+        /* sections inside card */
+        .sub-section {
+            margin-bottom: 32px;
+        }
+
+        .sub-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .sub-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding-left: 12px;
+            border-left: 3px solid var(--accent);
+            margin-bottom: 16px;
+        }
+
+        .sub-title.green {
+            color: var(--green);
+            border-color: var(--green);
+        }
+
+        .sub-title.purple {
+            color: #b39cff;
+            border-color: #b39cff;
+        }
+
+        .sub-title.yellow {
+            color: var(--yellow);
+            border-color: var(--yellow);
+        }
+
+        .sub-title.pink {
+            color: var(--pink);
+            border-color: var(--pink);
+        }
+
+        ul.bullets {
+            list-style: none;
+        }
+
+        ul.bullets li {
+            position: relative;
+            padding-left: 20px;
+            color: var(--muted);
+            margin-bottom: 10px;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        ul.bullets li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-size: 11px;
+            top: 4px;
+        }
+
+        ul.bullets li strong {
+            color: var(--text);
+        }
+
+        /* model cards */
+        .model-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .model-card {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .model-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .model-card.winner {
+            border-color: var(--green);
+            background: linear-gradient(135deg, rgba(0, 212, 170, 0.05), var(--bg3));
+        }
+
+        .model-name {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .model-type {
+            font-size: 11px;
+            color: var(--muted);
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 10px;
+        }
+
+        .model-desc {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .winner-badge {
+            display: inline-block;
+            background: rgba(0, 212, 170, 0.15);
+            color: var(--green);
+            border: 1px solid rgba(0, 212, 170, 0.3);
+            border-radius: 100px;
+            padding: 3px 12px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        /* result metrics */
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .metric {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .metric.highlight {
+            border-color: var(--green);
+            background: rgba(0, 212, 170, 0.05);
+        }
+
+        .metric-val {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--green);
+        }
+
+        .metric.blue .metric-val {
+            color: var(--accent);
+        }
+
+        .metric-name {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        /* code block */
+        .code-block {
+            background: var(--code-bg);
+            border: 1px solid rgba(99, 130, 255, 0.15);
+            border-radius: 10px;
+            padding: 20px 24px;
+            margin: 16px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12.5px;
+            color: #cdd6f4;
+            overflow-x: auto;
+            line-height: 1.8;
+        }
+
+        .code-block .kw {
+            color: #cba6f7;
+        }
+
+        .code-block .fn {
+            color: #89b4fa;
+        }
+
+        .code-block .str {
+            color: #a6e3a1;
+        }
+
+        .code-block .num {
+            color: #fab387;
+        }
+
+        .code-block .cm {
+            color: #585b70;
+        }
+
+        /* pipeline steps */
+        .pipeline {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .pipeline-step {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px 18px;
+            flex: 1;
+            min-width: 140px;
+            text-align: center;
+            position: relative;
+        }
+
+        .pipeline-step::after {
+            content: '→';
+            position: absolute;
+            right: -14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: 16px;
+            z-index: 2;
+        }
+
+        .pipeline-step:last-child::after {
+            display: none;
+        }
+
+        .step-icon {
+            font-size: 1.4rem;
+            margin-bottom: 6px;
+        }
+
+        .step-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .step-detail {
+            font-size: 10px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        /* ── ARCH DIAGRAM ───────────────────────────────────────────────────*/
+        .arch-diagram {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        /* ── TECH STACK SECTION ────────────────────────────────────────────*/
+        .stack-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .stack-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            transition: border-color 0.2s;
+        }
+
+        .stack-card:hover {
+            border-color: var(--accent);
+        }
+
+        .stack-cat {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 12px;
+        }
+
+        .stack-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .stack-item {
+            background: var(--bg3);
+            color: var(--text);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ── TIMELINE ──────────────────────────────────────────────────────*/
+        .timeline {
+            position: relative;
+            padding-left: 32px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--accent), var(--accent2));
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 28px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -28px;
+            top: 6px;
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 12px rgba(79, 124, 255, 0.5);
+        }
+
+        .tl-date {
+            font-size: 11px;
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 4px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .tl-title {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .tl-desc {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        /* ── FOOTER ─────────────────────────────────────────────────────────*/
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 40px 0;
+            text-align: center;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* ── nav ── */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10, 15, 30, 0.85);
+            backdrop-filter: blur(12px) saturate(1.4);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 0;
+        }
+
+        .nav-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-logo {
+            font-weight: 800;
+            font-size: 15px;
+            color: var(--text);
+        }
+
+        .nav-logo span {
+            color: var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 28px;
+        }
+
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent);
+        }
+
+        /* fade-in animation */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.6s, transform 0.6s;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* responsive */
+        @media (max-width:768px) {
+
+            .card-header,
+            .card-body {
+                padding: 20px;
+            }
+
+            .pipeline {
+                flex-direction: column;
+            }
+
+            .pipeline-step::after {
+                content: '↓';
+                right: auto;
+                left: 50%;
+                bottom: -16px;
+                top: auto;
+                transform: translateX(-50%);
+            }
+
+            .model-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAV -->
+    <nav>
+        <div class="nav-inner">
+            <div class="nav-logo">Huynh <span>Hai</span></div>
+            <div class="nav-links">
+                <a href="#research">Research</a>
+                <a href="#capstone">Capstone</a>
+                <a href="#stack">Tech Stack</a>
+                <a href="#timeline">Timeline</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-glow glow-blue"></div>
+        <div class="hero-glow glow-purple"></div>
+        <div class="hero-glow glow-teal"></div>
+        <div class="container">
+            <div class="badge">Research Portfolio · 2025–2026</div>
+            <h1>Graph Machine Learning<br>for Epidemiological Forecasting</h1>
+            <p class="hero-sub">Sheaf Neural Networks · Spatio-Temporal Graph Attention Network · Dengue Outbreak
+                Prediction</p>
+            <p class="hero-desc">
+                Student Principal Investigator on a <strong>university-funded research project</strong> (Code 594, VND
+                5M)
+                benchmarking five graph neural network architectures on 14 years of Brazilian dengue surveillance data.
+                Winning model: <strong>R²&nbsp;=&nbsp;0.966, ROC-AUC&nbsp;=&nbsp;0.999</strong> — validated by a
+                hospital physician,
+                published on Kaggle. Followed by a <strong>nationwide capstone</strong> spanning 5,564 municipalities
+                and
+                16,382 graph edges with an interactive Plotly/Mapbox dashboard.
+            </p>
+            <div class="hero-links">
+                <a class="btn btn-primary" href="https://github.com/danielhuynh-04" target="_blank">⟨/⟩ GitHub</a>
+                <a class="btn btn-outline" href="https://kaggle.com/lthanhhihunh" target="_blank">📊 Kaggle</a>
+                <a class="btn btn-outline" href="https://linkedin.com/in/le-thanh-hai-huynh-8353913a1"
+                    target="_blank">💼 LinkedIn</a>
+            </div>
+
+            <div class="stat-strip">
+                <div class="stat">
+                    <div class="stat-val">0.966</div>
+                    <div class="stat-label">R² Test Score</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-val">0.999</div>
+                    <div class="stat-label">Receiver Operating Characteristic (Outbreak)</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-val">5,564</div>
+                    <div class="stat-label">Municipalities</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-val">16,382</div>
+                    <div class="stat-label">Graph Edges</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-val">14 yrs</div>
+                    <div class="stat-label">Data Span</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-val">5</div>
+                    <div class="stat-label">Graph Neural Network Architectures</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── PROJECT 1: RESEARCH ─────────────────────────────────────────────────-->
+    <section id="research">
+        <div class="container">
+            <div class="section-label">Project 01 — Official University Research</div>
+            <h2 class="section-title">Sheaf Attention Networks for<br><span>Dengue Outbreak Forecasting</span></h2>
+
+            <div class="project-card fade-in">
+                <div class="card-header">
+                    <div class="project-number">📋 Research Project Code 594 · Ho Chi Minh City Open University · VND
+                        5,000,000</div>
+                    <div class="project-title">Leveraging Algebraic Topology on Graphs to Predict Dengue Fever Outbreaks
+                        in Brazil</div>
+                    <div class="tags">
+                        <span class="tag">Python</span><span class="tag">PyTorch</span><span class="tag">PyTorch
+                            Geometric</span>
+                        <span class="tag">Sheaf Neural Networks</span><span class="tag">Graph Attention Networks</span>
+                        <span class="tag">SQL</span><span class="tag">GeoJSON</span><span
+                            class="tag">Scikit-learn</span>
+                    </div>
+                    <div class="project-meta">
+                        <span>📅 May 2025 – Mar 2026</span>
+                        <span>👤 Student Principal Investigator</span>
+                        <span>👥 3-member team</span>
+                        <span>🏥 Validated with Hospital for Tropical Diseases physician</span>
+                    </div>
+                </div>
+
+                <div class="card-body">
+
+                    <!-- OVERVIEW -->
+                    <div class="sub-section">
+                        <div class="sub-title">Overview</div>
+                        <ul class="bullets">
+                            <li>Led the full research lifecycle: <strong>authored the proposal</strong> (literature
+                                review, research gap, methodology, experimental design), managed team execution via
+                                Gantt chart and milestone tracking, and controlled a VND 5M university budget.</li>
+                            <li>Core question: <em>Can topological graph learning — specifically Sheaf Neural Networks —
+                                    outperform classical Graph Neural Network architectures at predicting dengue
+                                    outbreak weeks in a heterophilic epidemiological network?</em></li>
+                            <li>Motivation: Classical Graph Neural Networks assume <strong>homophily</strong> (similar
+                                neighbors). Brazilian municipalities are <strong>heterophilic</strong> — urban/rural
+                                mix, climate zones, migration patterns — requiring direction-aware, asymmetric message
+                                passing.</li>
+                        </ul>
+                    </div>
+
+                    <!-- DATA PIPELINE -->
+                    <div class="sub-section">
+                        <div class="sub-title green">Data Engineering Pipeline</div>
+                        <div class="pipeline">
+                            <div class="pipeline-step">
+                                <div class="step-icon">🗄️</div>
+                                <div class="step-label">Raw Sources</div>
+                                <div class="step-detail">SINAN, ECMWF, IBGE</div>
+                            </div>
+                            <div class="pipeline-step">
+                                <div class="step-icon">🔧</div>
+                                <div class="step-label">14 Features</div>
+                                <div class="step-detail">Climate, demo, disease, lags</div>
+                            </div>
+                            <div class="pipeline-step">
+                                <div class="step-icon">📐</div>
+                                <div class="step-label">Graph Build</div>
+                                <div class="step-detail">k-Nearest Neighbours · WGS84 · PyTorch Geometric edge index
+                                </div>
+                            </div>
+                            <div class="pipeline-step">
+                                <div class="step-icon">📦</div>
+                                <div class="step-label">Weekly Snapshots</div>
+                                <div class="step-detail">log1p + Standard Scaler + masks</div>
+                            </div>
+                            <div class="pipeline-step">
+                                <div class="step-icon">🤖</div>
+                                <div class="step-label">Graph Neural Network Training</div>
+                                <div class="step-detail">AdamW · Huber Loss · Early Stopping</div>
+                            </div>
+                            <div class="pipeline-step">
+                                <div class="step-icon">📊</div>
+                                <div class="step-label">Evaluation</div>
+                                <div class="step-detail">R² · Receiver Operating Characteristic · Duan smearing</div>
+                            </div>
+                        </div>
+                        <ul class="bullets">
+                            <li><strong>Sources:</strong> SINAN/DATASUS (dengue surveillance), ECMWF ERA5 (climate
+                                reanalysis), IBGE (demographics), biome & Köppen zone classification.</li>
+                            <li><strong>14 features/municipality/week:</strong> incidence rate, temperature
+                                (min/max/mean), precipitation, humidity, NDVI, population density, urbanization index,
+                                biome, Köppen zone, lagged incidence (lag-1 through lag-4 weeks).</li>
+                            <li><strong>Preprocessing:</strong> log1p label transform (skew suppression) · Standard
+                                Scaler for node features · spatial graph via k-Nearest Neighbours on WGS84 geographic
+                                coordinate system → PyTorch Geometric edge index format · automated edge symmetry &
+                                connectivity checks.</li>
+                            <li><strong>Serialization:</strong> each weekly snapshot saved as a <code>.pt</code> PyTorch
+                                tensor file embedding node features, labels, graph structure, and boolean train/val/test
+                                masks — enabling reproducible multi-epoch loading.</li>
+                        </ul>
+                    </div>
+
+                    <!-- MODELS -->
+                    <div class="sub-section">
+                        <div class="sub-title purple">5 Graph Neural Network Architectures Benchmarked</div>
+                        <div class="model-grid">
+                            <div class="model-card">
+                                <div class="model-name">Simple Graph Neural Network</div>
+                                <div class="model-type">Baseline · Standard message passing</div>
+                                <div class="model-desc">Standard message passing with equal neighbor aggregation.
+                                    Assumes perfect homophily — every neighbor has identical influence. Serves as the
+                                    weakest baseline.</div>
+                            </div>
+                            <div class="model-card">
+                                <div class="model-name">Graph Convolutional Network</div>
+                                <div class="model-type">Spectral filtering · Symmetric normalized Laplacian</div>
+                                <div class="model-desc">Spectral filtering via symmetric normalized Laplacian. Still
+                                    assumes homophily — all neighbors contribute equally regardless of epidemic context.
+                                </div>
+                            </div>
+                            <div class="model-card">
+                                <div class="model-name">Spatio-Temporal Graph Attention Network</div>
+                                <div class="model-type">Multi-Head Attention + Gated Recurrent Unit</div>
+                                <div class="model-desc">Multi-head attention (α-weights) over spatial neighbors + Gated
+                                    Recurrent Unit for temporal lag sequences. Hidden dimension=128, attention
+                                    heads=(4,4).</div>
+                            </div>
+                            <div class="model-card">
+                                <div class="model-name">Sheaf Neural Network</div>
+                                <div class="model-type">Algebraic Topology baseline · Sheaf Laplacian</div>
+                                <div class="model-desc">Applies algebraic topology to graphs. Per-edge Restriction Maps
+                                    F(v→e) replace standard Laplacian with Sheaf Laplacian. Handles heterophily — first
+                                    model to break the homophily assumption.</div>
+                            </div>
+                            <div class="model-card winner">
+                                <div class="winner-badge">🏆 Best Model</div>
+                                <div class="model-name">Sheaf-Connection Neural Network</div>
+                                <div class="model-type">Asymmetric Connection Maps · Layer Normalization · Residual
+                                </div>
+                                <div class="model-desc">Extends Sheaf Neural Network with learnable <strong>asymmetric
+                                        2D rotation-based Connection Maps</strong> per edge. Captures direction-aware,
+                                    non-symmetric disease transmission. Residual connection + Layer Normalization.
+                                    Hidden dimension=64.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SHEAF ARCHITECTURE DEEP DIVE -->
+                    <div class="sub-section">
+                        <div class="sub-title purple">Sheaf-Connection Neural Network — Architecture Deep Dive</div>
+                        <ul class="bullets">
+                            <li>Each node <em>v</em> has a <strong>stalk</strong> — a local vector space split into S =
+                                hidden/2 pairs of 2D subspaces representing local disease state geometry.</li>
+                            <li>For each directed edge (src→dst), an <strong>edge Multi-Layer Perceptron</strong> takes
+                                [h_src ‖ h_dst ‖ |h_src–h_dst|] and outputs S rotation angles θ per stalk.</li>
+                            <li>Restriction map applied as <strong>2D rotation matrix</strong>: mapped_src = R(θ) ·
+                                h_src_stalk — mathematically faithful to Sheaf theory's connection structure, enabling
+                                direction-aware propagation.</li>
+                            <li><strong>Disagreement signal</strong>: diff = R(h_src) − h_dst, aggregated back to both
+                                endpoints to minimize structural inconsistency across the graph.</li>
+                            <li>Stabilized with <strong>residual connection</strong> + <strong>Layer
+                                    Normalization</strong>, followed by Exponential Linear Unit activation.</li>
+                            <li><strong>Temporal context</strong> from lag sequences mean-pooled through a lazy linear
+                                projection and fused into the node embedding before edge processing.</li>
+                        </ul>
+                        <div class="code-block">
+                            <span class="cm"># Core sheaf restriction map computation (sheaf_connection.py)</span>
+                            <span class="kw">def</span> <span class="fn">_edge_rotations</span>(self, h_src, h_dst):
+                            edge_feat = torch.cat([h_src, h_dst, torch.abs(h_src - h_dst)], dim=<span
+                                class="num">-1</span>) <span class="cm"># [E, 3H]</span>
+                            theta = self.edge_mlp(edge_feat) <span class="cm"># [E, S]</span>
+                            rot[..., <span class="num">0</span>, <span class="num">0</span>] = torch.cos(theta) <span
+                                class="cm"># 2×2 rotation matrix per stalk</span>
+                            rot[..., <span class="num">0</span>, <span class="num">1</span>] = -torch.sin(theta)
+                            rot[..., <span class="num">1</span>, <span class="num">0</span>] = torch.sin(theta)
+                            rot[..., <span class="num">1</span>, <span class="num">1</span>] = torch.cos(theta)
+                            <span class="kw">return</span> rot <span class="cm"># [E, S, 2, 2]</span>
+
+                            <span class="cm"># Restriction + disagreement aggregation</span>
+                            mapped_src = torch.einsum(<span class="str">"esab,esb->esa"</span>, rot, h_src_stalk) <span
+                                class="cm"># apply rotation</span>
+                            diff = mapped_src - h_dst_stalk <span class="cm"># disagreement</span>
+                            agg.index_add_(<span class="num">0</span>, dst, -diff) <span class="cm"># minimize
+                                disagreement</span>
+                        </div>
+                    </div>
+
+                    <!-- TRAINING -->
+                    <div class="sub-section">
+                        <div class="sub-title yellow">Training Setup & Leakage Controls</div>
+                        <ul class="bullets">
+                            <li><strong>Optimizer:</strong> AdamW · <strong>Loss:</strong> HuberLoss (δ=1.2) for
+                                outlier-robust regression · <strong>Gradient clipping:</strong> max_norm=1.0</li>
+                            <li><strong>Early stopping:</strong> patience=30 epochs on validation HuberLoss; best
+                                checkpoint auto-saved as <code>.pt</code> file</li>
+                            <li><strong>Temporal split (leakage-free):</strong> Train 2010–2020 / Validation 2021–2022 /
+                                Test 2023–2024 — zero temporal leakage across boundaries</li>
+                            <li><strong>Validation safeguards:</strong> automated feature timestamp leakage scan,
+                                permutation importance testing, edge mask structural verification</li>
+                            <li><strong>Bias-correction at inference:</strong> Duan smearing estimator (primary,
+                                computed from training residuals e^r̄) + σ²-shift fallback; 99.9th-percentile headroom
+                                clamp on back-transformed real-space predictions</li>
+                        </ul>
+                    </div>
+
+                    <!-- RESULTS -->
+                    <div class="sub-section">
+                        <div class="sub-title">Results — Sheaf-Connection Neural Network (Test Set 2023–2024)</div>
+                        <div class="metrics-row">
+                            <div class="metric highlight">
+                                <div class="metric-val">0.966</div>
+                                <div class="metric-name">R² Score</div>
+                            </div>
+                            <div class="metric highlight">
+                                <div class="metric-val">0.999</div>
+                                <div class="metric-name">Receiver Operating Characteristic Area Under Curve</div>
+                            </div>
+                            <div class="metric blue">
+                                <div class="metric-val">0.042</div>
+                                <div class="metric-name">Mean Absolute Error (log-space)</div>
+                            </div>
+                            <div class="metric blue">
+                                <div class="metric-val">14 yrs</div>
+                                <div class="metric-name">Training Data</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-val">5,564</div>
+                                <div class="metric-name">Municipalities</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-val">5</div>
+                                <div class="metric-name">Models Benchmarked</div>
+                            </div>
+                        </div>
+                        <br>
+                        <ul class="bullets">
+                            <li>Evaluation suite: <strong>Mean Absolute Error · Root Mean Squared Error · Symmetric Mean
+                                    Absolute Percentage Error · R² · Trimmed R² (1st–99th percentile, outlier-robust) ·
+                                    Area Under Receiver Operating Characteristic Curve · Precision-Recall Area Under
+                                    Curve</strong></li>
+                            <li>Research methodology <strong>validated with a physician</strong> at the Hospital for
+                                Tropical Diseases; proposed transfer framework for Vietnam's epidemiological
+                                surveillance.</li>
+                            <li>Full report published at <strong>Ho Chi Minh City Open University</strong>; code and
+                                reproducible pipeline open-sourced on <strong>Kaggle</strong> — 100+ views, 10+
+                                downloads.</li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── PROJECT 2: CAPSTONE ────────────────────────────────────────────────────-->
+    <section id="capstone" style="padding-top:0">
+        <div class="container">
+            <div class="section-label">Project 02 — Capstone Thesis</div>
+            <h2 class="section-title">Nationwide Dengue Forecasting<br><span>& Spatio-Temporal Dashboard</span></h2>
+
+            <div class="project-card fade-in">
+                <div class="card-header">
+                    <div class="project-number">🎓 Capstone Thesis · HCMC Dept. of Science & Technology · Ho Chi Minh
+                        City Open University Library</div>
+                    <div class="project-title">End-to-End Spatio-Temporal Graph Attention Network for Dengue Forecasting
+                        Across All 5,564 Brazilian Municipalities</div>
+                    <div class="tags">
+                        <span class="tag">Python</span><span class="tag">PyTorch Geometric</span>
+                        <span class="tag purple">Plotly</span><span class="tag purple">Mapbox GL JS</span>
+                        <span class="tag green">Apache Parquet</span><span class="tag">GeoJSON</span>
+                        <span class="tag">SQL</span><span class="tag">JavaScript</span><span class="tag">HTML/CSS</span>
+                    </div>
+                    <div class="project-meta">
+                        <span>📅 Jul 2025 – Sep 2025</span>
+                        <span>🗺️ 5,564 municipalities · 16,382 graph edges</span>
+                        <span>📚 Submitted to University Library</span>
+                    </div>
+                </div>
+
+                <div class="card-body">
+
+                    <!-- OVERVIEW -->
+                    <div class="sub-section">
+                        <div class="sub-title">Overview</div>
+                        <ul class="bullets">
+                            <li>Scaled the research pipeline from a benchmarking study to a <strong>production-grade
+                                    nationwide forecasting system</strong> covering every Brazilian municipality — the
+                                most comprehensive graph-based dengue study in the codebase.</li>
+                            <li>End-to-end: raw open data → feature engineering → graph construction → model training →
+                                bias-corrected inference → interactive offline dashboard visible in any browser.</li>
+                        </ul>
+                    </div>
+
+                    <!-- GRAPH DESIGN -->
+                    <div class="sub-section">
+                        <div class="sub-title green">Nationwide Graph Design</div>
+                        <ul class="bullets">
+                            <li><strong>Nodes:</strong> 5,564 Brazilian municipalities, each identified by a 7-digit
+                                IBGE geocode with weekly epidemiological state vectors.</li>
+                            <li><strong>Edges:</strong> 16,382 directed connections built via <strong>k-Nearest
+                                    Neighbours (k=6)</strong> on WGS84 geographic coordinates — modeling geographic
+                                proximity as a proxy for disease transmission pathways.</li>
+                            <li>Edge index encoded as <strong>PyTorch Geometric <code>edge_index</code></strong> [2×E]
+                                tensors; automated symmetry, connectivity, and out-of-bounds sanity checks applied
+                                before every training run.</li>
+                            <li>Multi-source node feature matrix: <strong>ECMWF ERA5</strong> climate variables,
+                                <strong>IBGE</strong> census demographics, biome classification, Köppen zone, lagged
+                                incidence (lag-1–4 weeks); full preprocessing with log1p transform + StandardScaler.
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- ST-GAT ARCHITECTURE -->
+                    <div class="sub-section">
+                        <div class="sub-title purple">Spatio-Temporal Graph Attention Network Architecture</div>
+                        <div class="arch-diagram">
+                            <div
+                                style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;">
+                                <div
+                                    style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px 18px;text-align:center;min-width:130px;">
+                                    <div style="color:var(--accent);font-weight:700;font-size:13px;">Temporal Encoder
+                                    </div>
+                                    <div style="font-size:11px;color:var(--muted);margin-top:6px;">Gated Recurrent
+                                        Unit<br>(hidden=64)<br>+ Multi-Head Attention<br>(4 heads)</div>
+                                    <div style="margin-top:8px;font-size:10px;color:var(--green);">Input: [N, T, F_lag]
+                                    </div>
+                                </div>
+                                <div style="font-size:22px;color:var(--muted);">→</div>
+                                <div
+                                    style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px 18px;text-align:center;min-width:130px;">
+                                    <div style="color:#b39cff;font-weight:700;font-size:13px;">Feature Fusion</div>
+                                    <div style="font-size:11px;color:var(--muted);margin-top:6px;">Concatenate
+                                        node<br>features + temporal<br>embedding</div>
+                                    <div style="margin-top:8px;font-size:10px;color:var(--green);">Output: [N,
+                                        F+t_hidden]</div>
+                                </div>
+                                <div style="font-size:22px;color:var(--muted);">→</div>
+                                <div
+                                    style="background:var(--bg);border:1px solid rgba(79,124,255,0.4);border-radius:8px;padding:14px 18px;text-align:center;min-width:130px;">
+                                    <div style="color:var(--accent);font-weight:700;font-size:13px;">Graph Attention
+                                        Convolution Layer 1</div>
+                                    <div style="font-size:11px;color:var(--muted);margin-top:6px;">4 attention
+                                        heads<br>concat=True<br>Exponential Linear Unit</div>
+                                    <div style="margin-top:8px;font-size:10px;color:var(--green);">Output: [N, 128×4]
+                                    </div>
+                                </div>
+                                <div style="font-size:22px;color:var(--muted);">→</div>
+                                <div
+                                    style="background:var(--bg);border:1px solid rgba(79,124,255,0.4);border-radius:8px;padding:14px 18px;text-align:center;min-width:130px;">
+                                    <div style="color:var(--accent);font-weight:700;font-size:13px;">Graph Attention
+                                        Convolution Layer 2</div>
+                                    <div style="font-size:11px;color:var(--muted);margin-top:6px;">4 attention
+                                        heads<br>concat=False<br>Exponential Linear Unit</div>
+                                    <div style="margin-top:8px;font-size:10px;color:var(--green);">Output: [N, 128]
+                                    </div>
+                                </div>
+                                <div style="font-size:22px;color:var(--muted);">→</div>
+                                <div
+                                    style="background:var(--bg);border:1px solid var(--green);border-radius:8px;padding:14px 18px;text-align:center;min-width:130px;">
+                                    <div style="color:var(--green);font-weight:700;font-size:13px;">Output Head</div>
+                                    <div style="font-size:11px;color:var(--muted);margin-top:6px;">Linear(128→1)<br>Duan
+                                        smearing<br>back-transform</div>
+                                    <div style="margin-top:8px;font-size:10px;color:var(--green);">Output: [N] incidence
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <ul class="bullets">
+                            <li><strong>Temporal Encoder:</strong> Gated Recurrent Unit processes the lag sequence →
+                                Multi-Head Attention over Gated Recurrent Unit hidden states → residual last-step
+                                output. Captures sequential temporal patterns of outbreak progression.</li>
+                            <li><strong>Spatial Encoder (Graph Attention Convolution):</strong> attention coefficient
+                                α_ij learned per edge — each municipality adaptively weights its neighbors based on
+                                their current epidemic state, not uniformly.</li>
+                            <li><strong>Loss:</strong> HuberLoss (δ=1.2) — robust against outlier municipalities with
+                                extreme incidence spikes. <strong>Optimizer:</strong> AdamW with weight decay.</li>
+                        </ul>
+                    </div>
+
+                    <!-- EVALUATION -->
+                    <div class="sub-section">
+                        <div class="sub-title yellow">Evaluation Suite</div>
+                        <ul class="bullets">
+                            <li><strong>Regression:</strong> Mean Absolute Error · Root Mean Squared Error · Symmetric
+                                Mean Absolute Percentage Error · R² · <strong>Trimmed R² (1st–99th percentile)</strong>
+                                — clip extreme outlier municipalities before computing R² for a robustness check.</li>
+                            <li><strong>Classification projection:</strong> Area Under the Receiver Operating
+                                Characteristic Curve and Precision-Recall Area Under Curve derived from regression
+                                scores using the 90th-percentile of training incidence as the outbreak detection
+                                threshold.</li>
+                            <li><strong>Epoch-level logging:</strong> train loss, val loss, elapsed time, and
+                                best-val-so-far logged to CSV for convergence analysis and reproducibility.</li>
+                        </ul>
+                    </div>
+
+                    <!-- DASHBOARD -->
+                    <div class="sub-section">
+                        <div class="sub-title pink">Interactive Plotly / Mapbox Dashboard</div>
+                        <ul class="bullets">
+                            <li><strong>Zero-server architecture:</strong> fully offline dashboard — Plotly Express +
+                                Mapbox GL JS + vanilla JavaScript/HTML. No Flask, no backend. Runs directly in browser.
+                            </li>
+                            <li><strong>Choropleth risk layer (Scattermapbox):</strong> municipality-level outbreak
+                                probability overlaid on Brazil map, color-coded by risk tier.</li>
+                            <li><strong>Error heatmap (Densitymapbox):</strong> spatial distribution of model forecast
+                                error — identifies regions the model struggles with.</li>
+                            <li><strong>Temporal trend charts:</strong> weekly predicted vs actual incidence by region;
+                                top-N highest-risk municipality ranking table.</li>
+                            <li><strong>Data exchange:</strong> model outputs serialized to <strong>Apache
+                                    Parquet</strong> → converted to browser-readable JSON;
+                                <strong>GeoJSON/Shapefile</strong> processing for 5,564 municipal boundary polygon
+                                overlays.</li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── TECH STACK ─────────────────────────────────────────────────────────────-->
+    <section id="stack">
+        <div class="container">
+            <div class="section-label">Full Technology Stack</div>
+            <h2 class="section-title">What Was <span>Built With</span></h2>
+            <div class="stack-grid">
+                <div class="stack-card">
+                    <div class="stack-cat">Core Language</div>
+                    <div class="stack-items">
+                        <span class="stack-item">Python 3.10</span><span class="stack-item">SQL</span><span
+                            class="stack-item">JavaScript</span><span class="stack-item">HTML/CSS</span>
+                    </div>
+                </div>
+                <div class="stack-card">
+                    <div class="stack-cat">Deep Learning</div>
+                    <div class="stack-items">
+                        <span class="stack-item">PyTorch</span><span class="stack-item">PyTorch Geometric</span><span
+                            class="stack-item">torch.nn</span><span class="stack-item">Graph Attention
+                            Convolution</span><span class="stack-item">Gated Recurrent Unit</span>
+                    </div>
+                </div>
+                <div class="stack-card">
+                    <div class="stack-cat">Graph Neural Network Models</div>
+                    <div class="stack-items">
+                        <span class="stack-item">Simple Graph Neural Network</span><span class="stack-item">Graph
+                            Convolutional Network</span><span class="stack-item">Spatio-Temporal Graph Attention
+                            Network</span><span class="stack-item">Sheaf Neural Network</span><span
+                            class="stack-item">Sheaf-Connection Neural Network</span>
+                    </div>
+                </div>
+                <div class="stack-card">
+                    <div class="stack-cat">Optimization</div>
+                    <div class="stack-items">
+                        <span class="stack-item">AdamW</span><span class="stack-item">HuberLoss</span><span
+                            class="stack-item">Gradient Clip</span><span class="stack-item">Early Stopping</span><span
+                            class="stack-item">Duan Smearing</span>
+                    </div>
+                </div>
+                <div class="stack-card">
+                    <div class="stack-cat">Data & Feature Engineering</div>
+                    <div class="stack-items">
+                        <span class="stack-item">Pandas</span><span class="stack-item">NumPy</span><span
+                            class="stack-item">Scikit-learn</span><span class="stack-item">log1p transform</span><span
+                            class="stack-item">Standard Scaler</span><span class="stack-item">Apache Parquet</span>
+                    </div>
+                </div>
+                <div class="stack-card">
+                    <div class="stack-cat">Geospatial</div>
+                    <div class="stack-items">
+                        <span class="stack-item">GeoJSON</span><span class="stack-item">Shapefile</span><span
+                            class="stack-item">WGS84 Coordinate System</span><span class="stack-item">k-Nearest
+                            Neighbours graph</span><span class="stack-item">IBGE geocodes</span>
+                    </div>
+                </div>
+                <div class="stack-card">
+                    <div class="stack-cat">Visualization</div>
+                    <div class="stack-items">
+                        <span class="stack-item">Plotly</span><span class="stack-item">Mapbox GL JS</span><span
+                            class="stack-item">Matplotlib</span><span class="stack-item">Choropleth</span><span
+                            class="stack-item">Densitymapbox</span>
+                    </div>
+                </div>
+                <div class="stack-card">
+                    <div class="stack-cat">Data Sources</div>
+                    <div class="stack-items">
+                        <span class="stack-item">SINAN/DATASUS</span><span class="stack-item">ECMWF ERA5</span><span
+                            class="stack-item">IBGE Census</span><span class="stack-item">Köppen zones</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── TIMELINE ───────────────────────────────────────────────────────────────-->
+    <section id="timeline">
+        <div class="container">
+            <div class="section-label">Research Timeline</div>
+            <h2 class="section-title">Project <span>Milestones</span></h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="tl-date">May 2025</div>
+                    <div class="tl-title">Research Project Initiated (Code 594)</div>
+                    <div class="tl-desc">Authored the research proposal; submitted to Ho Chi Minh City Open University
+                        Graduate Committee; secured VND 5,000,000 funding; assembled 3-member team.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="tl-date">Jun – Jul 2025</div>
+                    <div class="tl-title">Data Engineering & Graph Construction</div>
+                    <div class="tl-desc">Sourced and merged SINAN, ECMWF ERA5, IBGE datasets; engineered 14 features per
+                        municipality per week; built k-NN spatial graph; generated weekly .pt snapshots (2010–2024).
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="tl-date">Jul – Sep 2025</div>
+                    <div class="tl-title">Capstone Thesis (Parallel Track)</div>
+                    <div class="tl-desc">Built the nationwide ST-GAT pipeline (5,564 nodes, 16,382 edges) and the
+                        interactive Plotly/Mapbox dashboard. Submitted thesis to HCMCOU Library and HCMC Dept. of
+                        Science & Technology.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="tl-date">Sep – Dec 2025</div>
+                    <div class="tl-title">GNN Benchmarking (5 Architectures)</div>
+                    <div class="tl-desc">Implemented, tuned, and evaluated Simple GNN, GCN, ST-GAT, Sheaf NN, and
+                        Sheaf-Connection NN; applied strict temporal leakage controls and permutation testing.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="tl-date">Jan 2026</div>
+                    <div class="tl-title">Hospital Validation & Results</div>
+                    <div class="tl-desc">Methodology reviewed with physician at Hospital for Tropical Diseases. Final
+                        results: Sheaf-Connection NN achieves R²=0.966, ROC-AUC=0.999 on 2023–2024 held-out test data.
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="tl-date">Feb – Mar 2026</div>
+                    <div class="tl-title">Publication & Open Source</div>
+                    <div class="tl-desc">Full report submitted to Ho Chi Minh City Open University. Code, pipeline, and
+                        reproducible implementation published on Kaggle — 100+ views, 10+ downloads.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── FOOTER ─────────────────────────────────────────────────────────────────-->
+    <footer>
+        <div class="container">
+            <p style="margin-bottom:12px;font-weight:600;color:var(--text)">Huynh Le Thanh Hai · Ho Chi Minh City,
+                Vietnam</p>
+            <p>
+                <a href="mailto:Haiworkai@gmail.com">Haiworkai@gmail.com</a> ·
+                <a href="https://github.com/danielhuynh-04" target="_blank">GitHub</a> ·
+                <a href="https://kaggle.com/lthanhhihunh" target="_blank">Kaggle</a> ·
+                <a href="https://linkedin.com/in/le-thanh-hai-huynh-8353913a1" target="_blank">LinkedIn</a>
+            </p>
+            <p style="margin-top:16px;font-size:12px;color:#444">Built from source code, models, and reports · September
+                2026</p>
+        </div>
+    </footer>
+
+    <script>
+        // Fade-in on scroll
+        const obs = new IntersectionObserver(entries => {
+            entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+        }, { threshold: 0.08 });
+        document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(a => {
+            a.addEventListener('click', e => {
+                e.preventDefault();
+                document.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+    </script>
+</body>
+
+</html>
