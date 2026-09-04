@@ -190,6 +190,7 @@ This repository includes a standalone interactive portfolio (`portfolio.html`). 
 │   ├── sheaf_model.py         # Architecture 4: Sheaf Neural Network baseline
 │   ├── sheaf_connection.py    # Architecture 5: Sheaf-Connection Neural Network (best)
 │
+├── tools/                     # Utility scripts and operational tools
 ├── trainers/
 │   └── trainer_weekly.py      # Temporal sequence builder, temporal lag parsing
 │
@@ -199,8 +200,8 @@ This repository includes a standalone interactive portfolio (`portfolio.html`). 
 │   ├── buoc3_scale.py         # Standard Scaler, log1p transform (Z-score)
 │   ├── buoc4_check_scaled.py  # Sanity checks for graph structure masks
 │
+├── visualizations/            # ➔ Dashboard, Mapbox/Plotly visualizations, and rendering exports
 ├── run_global_gat.py          # Main entry point: epoch iteration, Huber loss, metrics
-├── export_dashboard.py        # PyArrow Parquet generator & self-contained HTML builder
 ├── portfolio.html             # ➔ INTERACTIVE RESEARCH PORTFOLIO (Open in browser)
 └── README.md                  # This documentation
 ```
