@@ -925,7 +925,7 @@
                 </div>
                 <div class="stat">
                     <div class="stat-val">0.999</div>
-                    <div class="stat-label">Receiver Operating Characteristic (Outbreak)</div>
+                    <div class="stat-label">ROC-AUC (Outbreak)</div>
                 </div>
                 <div class="stat">
                     <div class="stat-val">5,564</div>
@@ -1026,7 +1026,7 @@
                             <div class="pipeline-step">
                                 <div class="step-icon">📊</div>
                                 <div class="step-label">Evaluation</div>
-                                <div class="step-detail">R² · Receiver Operating Characteristic · Duan smearing</div>
+                                <div class="step-detail">R² · ROC-AUC · Duan smearing</div>
                             </div>
                         </div>
                         <ul class="bullets">
@@ -1158,7 +1158,7 @@
                             </div>
                             <div class="metric highlight">
                                 <div class="metric-val">0.999</div>
-                                <div class="metric-name">Receiver Operating Characteristic Area Under Curve</div>
+                                <div class="metric-name">ROC-AUC</div>
                             </div>
                             <div class="metric blue">
                                 <div class="metric-val">0.042</div>
@@ -1181,8 +1181,7 @@
                         <ul class="bullets">
                             <li>Evaluation suite: <strong>Mean Absolute Error · Root Mean Squared Error · Symmetric Mean
                                     Absolute Percentage Error · R² · Trimmed R² (1st–99th percentile, outlier-robust) ·
-                                    Area Under Receiver Operating Characteristic Curve · Precision-Recall Area Under
-                                    Curve</strong></li>
+                                    ROC-AUC</strong></li>
                             <li>Research methodology <strong>validated with a physician</strong> at the Hospital for
                                 Tropical Diseases; proposed transfer framework for Vietnam's epidemiological
                                 surveillance.</li>
@@ -1329,8 +1328,7 @@
                             <li><strong>Regression:</strong> Mean Absolute Error · Root Mean Squared Error · Symmetric
                                 Mean Absolute Percentage Error · R² · <strong>Trimmed R² (1st–99th percentile)</strong>
                                 — clip extreme outlier municipalities before computing R² for a robustness check.</li>
-                            <li><strong>Classification projection:</strong> Area Under the Receiver Operating
-                                Characteristic Curve and Precision-Recall Area Under Curve derived from regression
+                            <li><strong>Classification projection:</strong> ROC-AUC derived from regression
                                 scores using the 90th-percentile of training incidence as the outbreak detection
                                 threshold.</li>
                             <li><strong>Epoch-level logging:</strong> train loss, val loss, elapsed time, and
@@ -1354,7 +1352,8 @@
                             <li><strong>Data exchange:</strong> model outputs serialized to <strong>Apache
                                     Parquet</strong> → converted to browser-readable JSON;
                                 <strong>GeoJSON/Shapefile</strong> processing for 5,564 municipal boundary polygon
-                                overlays.</li>
+                                overlays.
+                            </li>
                         </ul>
                     </div>
 
@@ -1452,7 +1451,8 @@
                     <div class="tl-date">Jun – Jul 2025</div>
                     <div class="tl-title">Data Engineering & Graph Construction</div>
                     <div class="tl-desc">Sourced and merged SINAN, ECMWF ERA5, IBGE datasets; engineered 14 features per
-                        municipality per week; built k-NN spatial graph; generated weekly .pt snapshots (2010–2024).
+                        municipality per week; built Queen Contiguity + k-NN=6 spatial graph; generated weekly .pt
+                        snapshots (2010–2024).
                     </div>
                 </div>
                 <div class="timeline-item">
