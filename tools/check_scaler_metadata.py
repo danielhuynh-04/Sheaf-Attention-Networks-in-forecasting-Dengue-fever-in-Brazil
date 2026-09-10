@@ -13,6 +13,6 @@ d = load_pt(paths[0])
 keys = sorted(list(d.keys()))
 print("Keys:", keys)
 
-# tìm meta scaler
+# find meta scaler
 scaler_keys = [k for k in keys if "scal" in k.lower() or "mean" in k.lower() or "std" in k.lower()]
 print("Scaler-like keys:", scaler_keys)

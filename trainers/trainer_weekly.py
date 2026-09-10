@@ -1,6 +1,6 @@
 # trainers/trainer_weekly.py
 # ------------------------------------------------------------
-# Dựng chuỗi thời gian từ *_lagK và tạo model TemporalGAT.
+# Builds the temporal lag sequence from *_lagK columns and factory initialization.
 # ------------------------------------------------------------
 from __future__ import annotations
 import torch

@@ -201,7 +201,7 @@ def load_centroids() -> pd.DataFrame:
 
     for c in need:
 
-        if c not in g.columns: raise ValueError(f"Centroids thiếu cột {c}")
+        if c not in g.columns: raise ValueError(f"Centroids missing column {c}")
 
     g["geocode"] = pd.to_numeric(g["geocode"], errors="coerce")
 
@@ -381,7 +381,7 @@ def trace_biome(geojson_path: pathlib.Path, geocodes: np.ndarray, biome: List[st
 
         colorscale += [[t, c], [min(1.0, t+1e-6), c]]
 
-    hov = [f"<b>{int(g)}</b><br>Biome: {b} / Quần xã: {b}"
+    hov = [f"<b>{int(g)}</b><br>Biome: {b} / Biome: {b}"
 
            for g,b in zip(geocodes, cats.astype(str).tolist())]
 
@@ -436,7 +436,7 @@ def trace_choro(geojson_path: pathlib.Path, name: str, colorscale: str, colorbar
 
         colorbar=dict(
 
-            title=name + " | " + {"Truth":"Thực tế","Prediction":"Dự báo","Residual":"Sai số"}.get(name,name),
+            title=name + " | " + {"Truth":"Reality","Prediction":"Forecast","Residual":"Error number"}.get(name,name),
 
             thickness=16, ticklen=3, xpad=6, x=colorbar_x, y=0.5, len=0.92, yanchor="middle"
 
@@ -616,7 +616,7 @@ def build_datapack(weeks: List[Tuple[int,int,str]],
 
 # ======================
 
-# FIGURE + HTML (biome dưới cùng)
+# FIGURE + HTML (bottom biome)
 
 # ======================
 
@@ -750,7 +750,7 @@ UI_HTML = """
 
 def build_figure(edges_df: Optional[pd.DataFrame], biome_meta: Optional[Dict]) -> go.Figure:
 
-    # Biome dưới cùng
+    # Bottom biome
 
     traces = []
 
@@ -766,7 +766,7 @@ def build_figure(edges_df: Optional[pd.DataFrame], biome_meta: Optional[Dict]) -
 
         traces.append(go.Choroplethmapbox(name="Biome", locations=[], z=[], visible=False, showscale=False))
 
-    # 3 choropleth, colorbar đặt lệch phải (sẽ tái bố trí bằng JS theo số lớp bật)
+    # 3 choropleths, colorbar placed to the right (will be rearranged with JS according to the number of layers enabled)
 
     traces.append(trace_choro(GEOJSON_PATH, "Truth",      DEFAULT_PALETTE_NUM, 1.02, None))
 
@@ -799,14 +799,14 @@ def build_figure(edges_df: Optional[pd.DataFrame], biome_meta: Optional[Dict]) -
 
     )
 
-    fig.update_layout(updatemenus=[])  # không dùng Plotly slider
+    fig.update_layout(updatemenus=[])  # Do not use Plotly slider
 
     return fig
 
 
-# JS: requestAnimationFrame + restyle, Play/Pause toggle + tốc độ N tuần / S giây
+# JS: requestAnimationFrame + restyle, Play/Pause toggle + speed N weeks / S seconds
 
-# và tái bố trí colorbar theo số lớp đang bật
+# and rearrange the colorbar according to the number of active layers
 
 JS = """
 
@@ -1246,7 +1246,7 @@ def main():
 
     if not weeks_all:
 
-        raise RuntimeError("Không tìm thấy tuần trong panel_node_ds.")
+        raise RuntimeError("Week not found in panel_node_ds.")
 
 
     def parse_w(s):
@@ -1277,7 +1277,7 @@ def main():
         weeks = weeks_all
 
 
-    print(f"[WEEKS] {len(weeks)} (từ {weeks[0][2]} → {weeks[-1][2]})")
+    print(f"[WEEKS] {len(weeks)} (from {weeks[0][2]} → {weeks[-1][2]})")
 
     print(f"[EDGE] {0 if edges_df is None else len(edges_df):,} edges")
 

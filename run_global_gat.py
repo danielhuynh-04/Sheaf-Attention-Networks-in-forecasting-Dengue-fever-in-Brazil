@@ -1,19 +1,19 @@
 # run_global_gat.py
 # ------------------------------------------------------------
-# Global Graph Model theo tuần (CPU/GPU), HuberLoss, early stopping,
-# metric đầy đủ (log/real, R2 trim), AUC/PR từ hồi quy.
-# Bias-correction: Duan smearing (ưu tiên) + fallback sigma^2.
-# Thêm clamp theo phân vị cao của TRAIN để giảm outlier ở miền thực.
+# Global weekly Graph Model (CPU/GPU), HuberLoss, early stopping,
+# full metrics (log/real, trimmed R2), AUC/PR from regression.
+# Bias-correction: Duan smearing (preferred) + fallback sigma^2.
+# Adds high-quantile clamping from TRAIN to reduce real-space outliers.
 #
-# OUTPUT chính cho paper:
+# PRIMARY OUTPUTS (for paper):
 # - data/interim/<model>_global_weekly_report.csv
 # - data/interim/<model>_global_summary.json
 # - data/interim/<model>_epoch_log.csv
 # - checkpoints/<model>_global_best.pt
 #
-# OUTPUT trực quan hoá (tuỳ chọn, KHÔNG PHÌNH Ổ CỨNG):
+# VISUALIZATION OUTPUTS (optional, disk-friendly):
 # - visualizations/data/<model>/node_predictions_<model>.csv
-#   (CHỈ export 1 lần ở cuối nếu --export_predictions 1)
+#   (exported once at the end if --export_predictions 1)
 # ------------------------------------------------------------
 from __future__ import annotations
 import os
@@ -38,7 +38,7 @@ from evaluation.metrics import (
     classification_metrics_from_regression
 )
 
-# ---------------------- cấu hình ----------------------
+# ---------------------- configuration ----------------------
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 SNAP_DIR = "data/processed/weekly_pt_scaled"
@@ -85,7 +85,7 @@ def year_from_file(path: str) -> int:
 def list_snapshots() -> List[str]:
     paths = sorted(glob.glob(os.path.join(SNAP_DIR, "*.pt")))
     if not paths:
-        raise FileNotFoundError(f"Không tìm thấy *.pt trong {SNAP_DIR}")
+        raise FileNotFoundError(f"No *.pt files found in {SNAP_DIR}")
     return paths
 
 
@@ -194,7 +194,7 @@ def run_epoch(
 
         mask = d.get(f"{phase}_mask", d.get(f"mask_{phase}", None))
         if mask is None:
-            raise KeyError(f"Thiếu {phase}_mask trong {p}")
+            raise KeyError(f"Missing {phase}_mask in {p}")
         mask = mask.to(DEVICE)
         if mask.sum().item() == 0:
             continue
@@ -251,13 +251,13 @@ def run_epoch(
             mic_true_log.append(y[mask].view(-1).detach().cpu())
             mic_pred_log.append(y_hat[mask].view(-1).detach().cpu())
 
-        # CHỈ export node predictions ở eval cuối (write_predictions=True)
+        # Only export node predictions at final eval (write_predictions=True)
         if write_predictions and (predictions_csv is not None) and (phase in ("val", "test")) and ("geocodes" in d):
             with torch.no_grad():
                 base = os.path.basename(p).replace(".pt", "")
                 yr_s, ew_s = base.split("_")
 
-                # dùng luôn y_hat, không forward lần 2
+                # Reuse y_hat, no second forward pass
                 yt_l = y.detach().cpu().view(-1)
                 yp_l = y_hat.detach().cpu().view(-1)
 
@@ -320,7 +320,7 @@ def run_epoch(
     return avg_loss, weekly_rows, micro
 
 
-# ---------------------- ước lượng thống kê TRAIN ----------------------
+# ---------------------- estimate train statistics ----------------------
 @torch.no_grad()
 def estimate_backtransform_stats_on_train(model, edge_index, train_paths) -> dict:
     resids = []
@@ -407,7 +407,7 @@ def main():
     os.makedirs(model_vis_dir, exist_ok=True)
     predictions_csv = os.path.join(model_vis_dir, f"node_predictions_{args.model}.csv")
 
-    # ---------------------- chọn model + hyperparams riêng ----------------------
+    # ---------------------- model selection + per-model hyperparams ----------------------
     if args.model == "gat":
         hidden_dim = 128
         lr = 3e-4
@@ -458,7 +458,7 @@ def main():
 
     t0 = time.time()
 
-    # reset epoch log nếu train mới
+    # Reset epoch log if training from scratch
     if int(args.eval_only) != 1:
         if os.path.exists(epoch_log_csv):
             os.remove(epoch_log_csv)
@@ -471,7 +471,7 @@ def main():
 
             elapsed_min = (time.time() - t0) / 60.0
 
-            # log hội tụ (paper): 1..10 và mỗi 10 epoch
+            # Convergence log (for paper): epochs 1..10 and every 10th epoch
             if (ep <= 10) or (ep % 10 == 0) or (ep == EPOCHS):
                 print(f"Epoch {ep:03d} | Train {tr_loss:.4f} | Val {va_loss:.4f}")
 
@@ -495,7 +495,7 @@ def main():
                     break
     else:
         if not os.path.exists(best_ckpt):
-            raise FileNotFoundError(f"Không tìm thấy checkpoint best: {best_ckpt}")
+            raise FileNotFoundError(f"Best checkpoint not found: {best_ckpt}")
         print("⚠️ eval_only=1: Skip training, load best checkpoint.")
 
     # ---------------------- load best & stats ----------------------
@@ -513,7 +513,7 @@ def main():
     # ---------------------- eval cuối ----------------------
     do_export_pred = (int(args.export_predictions) == 1)
 
-    # nếu export predictions -> ghi đè file của model để không phình
+    # If exporting predictions -> overwrite to prevent file bloat
     if do_export_pred and os.path.exists(predictions_csv):
         os.remove(predictions_csv)
 

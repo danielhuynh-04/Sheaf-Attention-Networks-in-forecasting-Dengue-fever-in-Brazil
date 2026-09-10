@@ -1,4 +1,16 @@
+# models/model_factory.py
+# ----------------------------------------------------------
+# Centralized factory for dynamically initializing any of the
+# 5 benchmarked graph neural network architectures by name.
+# ----------------------------------------------------------
+
+
 def build_model(name, **kwargs):
+    """
+    Build and return a graph neural network model by name.
+
+    Supported names: 'gnn', 'gcn', 'gat', 'sheaf', 'sheaf_conn'
+    """
 
     if name == "gnn":
         from .simple_gnn import SimpleGNN
@@ -13,12 +25,12 @@ def build_model(name, **kwargs):
         return TemporalGAT(**kwargs)
 
     elif name == "sheaf":
-        # baseline cũ
+        # Sheaf Neural Network baseline (edge MLP restriction maps)
         from .sheaf_model import SheafTemporal
         return SheafTemporal(**kwargs)
 
     elif name in ["sheaf_conn", "sheaf_connection"]:
-        # bản sheaf cải tiến mới
+        # Sheaf-Connection: improved variant with 2D rotation restriction maps
         from .sheaf_connection import SheafConnectionTemporal
         return SheafConnectionTemporal(**kwargs)
 

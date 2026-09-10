@@ -1,16 +1,16 @@
-# utils/buoc3_scale_features.py
+# utils/step3_scale_features.py
 # ------------------------------
-# BƯỚC 3: Scale features (train-only), log-transform label
-# - Input  : data/processed/weekly_pt/*.pt  (tạo từ Bước 2)
-# - Output : data/processed/weekly_pt_scaled/*.pt  (x đã scale, y=log1p(casos))
-# - Meta   : data/processed/scaler_weekly.json  (tham số scaler theo feature)
+# STEP 3: Feature Scaling (train-only) & Label Log-Transformation
+# - Input  : data/processed/weekly_pt/*.pt  (Generated via Step 2)
+# - Output : data/processed/weekly_pt_scaled/*.pt  (Scaled X, y=log1p(casos))
+# - Meta   : data/processed/scaler_weekly.json  (Stored transformation parameters)
 #
-# Ghi chú:
-# - Không dùng 'date' (đã bỏ ở Bước 2). Chỉ dựa vào year+epiweek.
-# - Scaler được ước lượng CHỈ từ năm train (2010-2020) để tránh leakage.
-# - Hỗ trợ 'standard' (mặc định) hoặc 'minmax'.
-# - Label: y' = log1p(y). Không scale thêm.
-# - Giữ nguyên thứ tự node/feature_cols/masks; chỉ thay x và y.
+# Production Notes:
+# - Strict feature-space isolation: Date column dropped; year+epiweek utilized for split boundaries.
+# - Leakage prevention: Scaler parameters (mean/std) estimated EXCLUSIVELY from training split (2010-2020).
+# - Supports 'standard' (Z-score) or 'minmax' scaling patterns.
+# - Label generation targets log-space regression via log1p.
+# ------------------------------
 
 import os
 import json
@@ -27,16 +27,16 @@ SCALER_JSON = os.path.join(PROCESSED_DIR, "scaler_weekly.json")
 os.makedirs(DST_DIR, exist_ok=True)
 
 # ------------------------------
-# Cấu hình scaler
+# Scaler System Configuration
 # ------------------------------
-SCALER_TYPE = "standard"  # "standard" | "minmax"
+SCALER_TYPE = "standard"  # Context: "standard" | "minmax"
 EPS = 1e-6
 
 def is_train_year(y: int) -> bool:
     return 2010 <= y <= 2020
 
 def parse_year_week_from_fname(fname: str):
-    # ví dụ: .../2017_14.pt hoặc 2017_14_something.pt
+    # Matches patterns like 2017_14.pt or 2017_14_suffix.pt
     base = os.path.basename(fname)
     name, _ = os.path.splitext(base)
     parts = name.split("_")
@@ -50,28 +50,26 @@ def parse_year_week_from_fname(fname: str):
         return None, None
 
 # ------------------------------
-# 1) Quét file, đọc meta để lấy số feature & feature_cols
+# 1) Metadata discovery & Feature enumeration
 # ------------------------------
 pt_files = sorted(glob.glob(os.path.join(SRC_DIR, "*.pt")))
 if not pt_files:
-    raise FileNotFoundError(f"Không tìm thấy snapshot .pt trong {SRC_DIR}. Hãy chạy Bước 2 trước.")
+    raise FileNotFoundError(f"Missing snapshot .pt files inside {SRC_DIR}. Please execute Step 2 pipeline first.")
 
-# Lấy một file mẫu để biết feature_cols
+# Extract sample schema
 sample = torch.load(pt_files[0], map_location="cpu", weights_only=False)
 feature_cols = sample.get("feature_cols", None)
 if feature_cols is None:
-    raise KeyError("Thiếu 'feature_cols' trong snapshot .pt (Bước 2).")
+    raise KeyError("Missing 'feature_cols' registry inside .pt snapshot. Execution halted to prevent silent failure.")
 
 F = len(feature_cols)
-print(f"📦 Bước 3 — Scale features ({SCALER_TYPE}), log1p(y). Số feature: {F}")
+print(f"📦 STEP 3 — Scale features ({SCALER_TYPE}), executing log1p(y). Detected Feature Dim: {F}")
 
 # ------------------------------
-# 2) Ước lượng tham số scaler từ TRAIN (2010-2020)
-#    - Standard: mean, std (per-feature)
-#    - MinMax  : min, max (per-feature)
+# 2) Leakage-free parameter estimation from TRAIN split (2010-2020)
 # ------------------------------
 if SCALER_TYPE == "standard":
-    # sum, sumsq, count để tính mean/std ổn định
+    # sum, sumsq initialization for numerically stable variance integration
     sum_feat = np.zeros((F,), dtype=np.float64)
     sumsq_feat = np.zeros((F,), dtype=np.float64)
     count = 0
@@ -79,7 +77,7 @@ elif SCALER_TYPE == "minmax":
     min_feat = np.full((F,), np.inf, dtype=np.float64)
     max_feat = np.full((F,), -np.inf, dtype=np.float64)
 else:
-    raise ValueError("SCALER_TYPE phải là 'standard' hoặc 'minmax'.")
+    raise ValueError("SCALER_TYPE must be 'standard' or 'minmax'.")
 
 train_files = []
 for p in pt_files:
@@ -90,14 +88,15 @@ for p in pt_files:
         train_files.append(p)
 
 if not train_files:
-    raise RuntimeError("Không tìm thấy file TRAIN (2010-2020) để ước lượng scaler.")
+    raise RuntimeError("Missing TRAIN split data (2010-2020). Impossible to estimate scaler parameters without data leakage.")
 
 for p in train_files:
     d = torch.load(p, map_location="cpu", weights_only=False)
     x = d["x"].cpu().numpy().astype(np.float64)  # (N,F)
-    # bảo đảm shape hợp lệ
+    
+    # Structural assertion constraint
     if x.ndim != 2 or x.shape[1] != F:
-        raise ValueError(f"x shape không khớp số feature ở {p}: {x.shape} vs F={F}")
+        raise ValueError(f"Dim mismatch at {p}: Input {x.shape} but registered feature dimension F={F}")
 
     if SCALER_TYPE == "standard":
         sum_feat += x.sum(axis=0)
@@ -112,14 +111,13 @@ if SCALER_TYPE == "standard":
     var = (sumsq_feat / max(count, 1)) - (mean * mean)
     var = np.maximum(var, 0.0)
     std = np.sqrt(var)
-    std = np.where(std < EPS, 1.0, std)  # tránh chia 0
+    std = np.where(std < EPS, 1.0, std)  # Protect against zero variance division
     scaler_params = {"type": "standard",
                      "mean": mean.tolist(),
                      "std": std.tolist(),
                      "feature_cols": feature_cols,
                      "train_count_rows": int(count)}
 elif SCALER_TYPE == "minmax":
-    # tránh TH min == max
     span = max_feat - min_feat
     span = np.where(span < EPS, 1.0, span)
     scaler_params = {"type": "minmax",
@@ -129,11 +127,11 @@ elif SCALER_TYPE == "minmax":
 
 with open(SCALER_JSON, "w", encoding="utf-8") as f:
     json.dump(scaler_params, f, ensure_ascii=False, indent=2)
-print(f"✅ Lưu tham số scaler: {SCALER_JSON}")
+print(f"✅ Scaler parameter estimates written to: {SCALER_JSON}")
 
 # ------------------------------
-# 3) Áp dụng scaler cho MỌI snapshot và log1p cho y
-#    - Ghi ra thư mục weekly_pt_scaled
+# 3) Matrix transformation map over all temporal snapshots
+#    Outputs written immediately to weekly_pt_scaled
 # ------------------------------
 n_written = 0
 
@@ -143,22 +141,22 @@ for p in pt_files:
     x = d["x"].cpu().numpy().astype(np.float32)  # (N,F)
     y = d["y"].cpu().numpy().astype(np.float32)  # (N,)
 
-    # scale X
+    # Apply scaling transformation
     if SCALER_TYPE == "standard":
         mean = np.array(scaler_params["mean"], dtype=np.float32)
         std  = np.array(scaler_params["std"], dtype=np.float32)
         x_scaled = (x - mean) / std
-    else:  # minmax
+    else:  # minmax fallback
         _min = np.array(scaler_params["min"], dtype=np.float32)
         _max = np.array(scaler_params["max"], dtype=np.float32)
         span = _max - _min
         span = np.where(span < EPS, 1.0, span).astype(np.float32)
-        x_scaled = (x - _min) / span  # in [0,1]
+        x_scaled = (x - _min) / span  # Constrains into [0,1]
 
-    # log1p cho y
+    # Target dependent variable transformation: log1p ensures zero lowerbound
     y_log = np.log1p(np.maximum(y, 0.0, dtype=np.float32))
 
-    # tạo bản sao dict để ghi
+    # Reconstruct representation map for serialization
     out = dict(d)
     out["x"] = torch.tensor(x_scaled, dtype=torch.float32)
     out["y"] = torch.tensor(y_log, dtype=torch.float32)
@@ -169,24 +167,24 @@ for p in pt_files:
     torch.save(out, os.path.join(DST_DIR, fname))
     n_written += 1
 
-print(f"✅ Đã scale & lưu {n_written} snapshot @ {DST_DIR}")
+print(f"✅ Batch transformed & serialized {n_written} feature snapshots at {DST_DIR}")
 
 # ------------------------------
-# 4) Kiểm tra nhanh 1 file mẫu
+# 4) Diagnostic structural test over root file output
 # ------------------------------
 sample_out = os.path.join(DST_DIR, os.path.basename(pt_files[0]))
 chk = torch.load(sample_out, map_location="cpu", weights_only=False)
 xs = chk["x"].numpy()
 ys = chk["y"].numpy()
 
-# sanity
+# Mathematical sanity scan targeting vanishing/exploding bounds
 nan_x = np.isnan(xs).sum()
 inf_x = np.isinf(xs).sum()
 nan_y = np.isnan(ys).sum()
 inf_y = np.isinf(ys).sum()
 
-print("Sanity (sample):")
+print("Sanity Diagnostic (Sample):")
 print(f"  x shape={xs.shape}, NaN={nan_x}, Inf={inf_x}")
 print(f"  y shape={ys.shape}, NaN={nan_y}, Inf={inf_y}")
-print(f"  feature_cols={len(chk.get('feature_cols', []))}, label_transform={chk.get('label_transform')}")
-print("🎉 Bước 3 hoàn tất.")
+print(f"  Feature cols={len(chk.get('feature_cols', []))}, Label transform: {chk.get('label_transform')}")
+print("🎉 STEP 3 COMPLETE.")

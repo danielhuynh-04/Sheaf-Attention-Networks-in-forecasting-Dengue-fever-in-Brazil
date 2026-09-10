@@ -902,8 +902,8 @@
             <p class="hero-sub">Sheaf Neural Networks · Spatio-Temporal Graph Attention Network · Dengue Outbreak
                 Prediction</p>
             <p class="hero-desc">
-                Student Principal Investigator on a <strong>university-funded research project</strong> (Code 594, VND
-                5M)
+                Student Principal Investigator on a <strong>university-funded research project</strong> (ID: 594, VND
+                4.5M Scholarship/Funding)
                 benchmarking five graph neural network architectures on 14 years of Brazilian dengue surveillance data.
                 Winning model: <strong>R²&nbsp;=&nbsp;0.966, ROC-AUC&nbsp;=&nbsp;0.999</strong> — validated by a
                 hospital physician,
@@ -955,10 +955,14 @@
 
             <div class="project-card fade-in">
                 <div class="card-header">
-                    <div class="project-number">📋 Research Project Code 594 · Ho Chi Minh City Open University · VND
-                        5,000,000</div>
-                    <div class="project-title">Leveraging Algebraic Topology on Graphs to Predict Dengue Fever Outbreaks
-                        in Brazil</div>
+                    <div class="project-number">📋 Research Project ID: 594 · Ho Chi Minh City Open University (Khoa
+                        ĐTĐB) · 4,500,000 VND Scholarship</div>
+                    <div class="project-title">Sheaf Attention Networks in forecasting Dengue fever in Brazil<br>
+                        <span
+                            style="font-size: 0.65em; font-weight: 500; color: #8892b0; margin-top: 4px; display: block;">Official
+                            Topic: SHEAF ATTENTION NETWORKS (SHEAFAN) TRONG NGHIÊN CỨU PHÂN TÍCH DỰ ĐOÁN DIỄN BIẾN DỊCH
+                            TỄ BỆNH TRUYỀN NHIỄM SỐT XUẤT HUYẾT Ở BRAZIL.</span>
+                    </div>
                     <div class="tags">
                         <span class="tag">Python</span><span class="tag">PyTorch</span><span class="tag">PyTorch
                             Geometric</span>
@@ -1043,6 +1047,40 @@
                                 tensor file embedding node features, labels, graph structure, and boolean train/val/test
                                 masks — enabling reproducible multi-epoch loading.</li>
                         </ul>
+                    </div>
+
+                    <!-- REPO STRUCTURE -->
+                    <div class="sub-section">
+                        <div class="sub-title yellow">Repository Architecture & Metrics</div>
+                        <div class="code-block">
+                            .
+                            ├── <span class="kw">evaluation/</span> <span class="cm"># Official Metrical Validation &
+                                Outlier Robustness</span>
+                            │ └── <span class="fn">metrics.py</span> <span class="cm"># R², Trimmed R², MAE (log),
+                                Classification ROC-AUC from Regression</span>
+                            │
+                            ├── <span class="kw">models/</span> <span class="cm"># Core PyTorch Neural Network
+                                Architectures</span>
+                            │ ├── <span class="fn">sheaf_connection.py</span> <span class="cm"># 🏆 Winner:
+                                Sheaf-Connection NN (Learnable 2D Rotation Maps)</span>
+                            │ └── <span class="fn">model_factory.py</span> <span class="cm"># Centralized factory
+                                pattern for dynamic model initialization</span>
+                            │
+                            ├── <span class="kw">utils/</span> <span class="cm"># Data Engineering & Preprocessing
+                                Pipeline</span>
+                            │ ├── <span class="fn">step1_build_edges.py</span> <span class="cm"># Step 1: spatial
+                                network generation (Queen Contiguity + k-NN=6)</span>
+                            │ └── <span class="fn">step4_check_scaled.py</span> <span class="cm"># Step 4: Strict
+                                boolean masking & PyTorch tensor assertions</span>
+                            │
+                            ├── <span class="kw">tools/</span> <span class="cm"># MLOps, Sanity Checks, Evaluation &
+                                Plotting</span>
+                            │ └── <span class="fn">check_leakage.py</span> <span class="cm"># Hard-stops if test-data
+                                temporal leakage is detected</span>
+                            │
+                            └── <span class="fn">run_global_gat.py</span> <span class="cm"># ⚙️ MAIN ENTRY POINT: epoch
+                                iteration, Huber loss optimization</span>
+                        </div>
                     </div>
 
                     <!-- MODELS -->
@@ -1443,9 +1481,9 @@
             <div class="timeline">
                 <div class="timeline-item">
                     <div class="tl-date">May 2025</div>
-                    <div class="tl-title">Research Project Initiated (Code 594)</div>
+                    <div class="tl-title">Research Project Initiated (ID: 594)</div>
                     <div class="tl-desc">Authored the research proposal; submitted to Ho Chi Minh City Open University
-                        Graduate Committee; secured VND 5,000,000 funding; assembled 3-member team.</div>
+                        Khoa ĐTĐB; secured 4,500,000 VND scholarship; assembled 3-member team.</div>
                 </div>
                 <div class="timeline-item">
                     <div class="tl-date">Jun – Jul 2025</div>

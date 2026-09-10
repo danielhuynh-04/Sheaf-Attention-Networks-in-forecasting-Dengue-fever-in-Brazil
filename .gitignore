@@ -7,12 +7,15 @@ __pycache__/
 checkpoints/
 models/*.pt
 models/*.pth
+
+# Data & Visualizations (Ignored to protect repo limits)
 data/
-evaluations/
-evaluation/
 visualizations/
 data/processed/
 data/interim/
+
+# EXCEPTION: Ensure evaluation is tracked
+!evaluation/
 
 # Word, PDF, and other documents
 *.docx

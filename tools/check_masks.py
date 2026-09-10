@@ -9,7 +9,7 @@ def load_pt(p):
     except TypeError:
         return torch.load(p, map_location="cpu")
 
-# check 20 file rải đều
+# Check 20 files evenly spread
 pick = paths[::max(1, len(paths)//20)]
 
 for p in pick:

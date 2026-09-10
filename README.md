@@ -12,8 +12,16 @@
   <img src="https://img.shields.io/badge/Apache_Parquet-E6822D?style=for-the-badge&logo=apache&logoColor=white">
 </p>
 
-_**Official University Student Research (Code 594)** • Ho Chi Minh City Open University • Validated by Hospital for Tropical Diseases_<br>
+_**Official University Student Research (ID: 594)** • Ho Chi Minh City Open University (Khoa ĐTĐB)_<br>
+_**Awarded 4,500,000 VND Science Research Scholarship** • Validated by Hospital for Tropical Diseases_<br>
+_**Official Topic:** SHEAF ATTENTION NETWORKS (SHEAFAN) TRONG NGHIÊN CỨU PHÂN TÍCH DỰ ĐOÁN DIỄN BIẾN DỊCH TỄ BỆNH TRUYỀN NHIỄM SỐT XUẤT HUYẾT Ở BRAZIL.<br>_
 _Student Principal Investigator: **Huynh Le Thanh Hai**_
+</div>
+
+<div align="center">
+  <br>
+  <b>📑 Official Research Documentation:</b><br>
+  <a href="./docs/Full_Research_Report_Topological_GNN.pdf">Download Full Research Report (PDF)</a>
 </div>
 
 ---
@@ -80,38 +88,35 @@ Captures direction-aware, non-symmetric disease transmission using learned rotat
 
 ```mermaid
 graph TD
-  subgraph "① Raw Data Collection (Mosqlimate Project DOI: 10.5281/zenodo.13328231)"
-    A1["SINAN/DATASUS\nDengue Surveillance"]
-    A2["ECMWF ERA5\nClimate Reanalysis"]
-    A3["IBGE Census\nDemographics"]
-    A4["Köppen & Biome\nClassification"]
+  subgraph "① Raw Data Ingestion (Mosqlimate)"
+    A1["SINAN/DATASUS (Dengue)"]
+    A2["ECMWF ERA5 (Climate)"]
+    A3["IBGE Census (Demographics)"]
   end
 
-  subgraph "② Feature Engineering — 14 Features per Municipality per Week"
-    B1["Epidemiological:\nIncidence rate, lag-1 to lag-4 weeks"]
-    B2["Climate:\nTemp min/max/mean, Precipitation, Humidity, NDVI"]
-    B3["Demographic:\nPopulation density, Urbanization index"]
-    B4["Geographic:\nBiome class, Köppen climate zone"]
-    A1 --> B1 & A2 --> B2 & A3 --> B3 & A4 --> B4
+  subgraph "② Spatial Edge Engine [utils/step1_ & step2_]"
+    B1["Geospatial WGS84 Parsing\nQueen Contiguity + k-NN=6"]
+    B2["Extract 14 Epidemiologic Features\nJoin Climate, Demographics & Lags"]
+    A1 --> B2 & A2 --> B2 & A3 --> B2
   end
 
-  subgraph "③ Graph Construction (Queen Contiguity + k-NN=6)"
-    C1["5,564 Nodes\n(Municipalities, 7-digit IBGE geocode)"]
-    C2["16,382 Edges under WGS84\nQueen adjacency + k-NN=6 for isolated nodes"]
-    C3["PyTorch Geometric edge_index format\nAutomated symmetry & zero self-loop validation"]
-    B1 & B2 & B3 & B4 --> C1 --> C2 --> C3
+  subgraph "③ Scaling & Tensor Serialization [utils/step3_scale_features.py]"
+    C1["log1p transformation (Skew control)"]
+    C2["Standard Scaler Z-score\n(node feature normalization)"]
+    C3["Serialize to PyTorch .pt snapshots"]
+    B1 --> C1 --> C2 --> C3
   end
 
-  subgraph "④ Preprocessing & Serialization"
-    D1["log1p label transform\n(distribution skew suppression)"]
-    D2["Standard Scaler Z-score\n(node feature normalization)"]
-    D3["Weekly .pt snapshots\n(2010–2024, with boolean masks)"]
-    C3 --> D1 --> D2 --> D3
+  subgraph "④ Tensor Integrity [utils/step4_check_scaled.py]"
+    D1["Strict boolean masking\ntrain/val/test boundary enforcement"]
+    D2["Automated edge symmetry check"]
+    C3 --> D1 --> D2
   end
 
   style A1 fill:#003366,color:#fff,stroke:#002244
-  style C2 fill:#336699,color:#fff,stroke:#113355
-  style D3 fill:#6699cc,color:#fff,stroke:#224466
+  style B1 fill:#336699,color:#fff,stroke:#113355
+  style C3 fill:#6699cc,color:#fff,stroke:#224466
+  style D2 fill:#336699,color:#fff,stroke:#113355
 ```
 
 All datasets derived from the **Mosqlimate Project** (Infodengue–Mosqlimate Sprint/Dengue Challenge) published on Zenodo (DOI: `10.5281/zenodo.13328231`), CC BY 4.0.
@@ -133,31 +138,31 @@ Scaled the research pipeline from a benchmarking study to a **production-grade n
 
 ```mermaid
 flowchart LR
-  subgraph START ["🚀 Project Initiation"]
+  subgraph START ["🚀 Initiation"]
     direction TB
-    S1["Write Research Proposal"]
-    S2["Secure VND 5M Funding"]
+    S1["Research Proposal (ID: 594)"]
+    S2["Khoa ĐTĐB 4.5M VND Scholarship"]
   end
 
-  subgraph DATA ["📦 Data Engineering Lane"]
+  subgraph DATA ["📦 Data Engineering Lane [utils/ & tools/]"]
     direction TB
-    D1["Collect Mosqlimate Data"]
-    D2["Build spatial graph\n5,564 nodes · 16,382 edges"]
-    D3["Serialize weekly .pt snapshots"]
+    D1["Fetch Mosqlimate Parquet Data"]
+    D2["Execute utils/step1 to step4\nBuild 5,564 nodes · 16,382 edges"]
+    D3["Generate weekly .pt snapshots"]
   end
 
-  subgraph MODEL ["🤖 Model Development Lane"]
+  subgraph MODEL ["🤖 Model Development Lane [models/ & trainers/]"]
     direction TB
-    M1["Implement 5 Graph Architectures"]
-    M2["Train with AdamW + Huber Loss δ=1.2"]
-    M3["Early Stopping + Checkpointing"]
+    M1["Initialize Arch via model_factory.py"]
+    M2["Train via run_global_gat.py\nAdamW + Huber Loss δ=1.2"]
+    M3["Early Stopping + Checkpointing\nCheck leakage via tools/check_leakage.py"]
   end
 
-  subgraph EVAL ["📊 Validation Lane"]
+  subgraph EVAL ["📊 Validation Lane [evaluation/metrics.py]"]
     direction TB
-    E1["Permutation testing & Leakage scan"]
-    E2["Duan Smearing Bias-Correction"]
-    E3["Hospital physician validation"]
+    E1["Duan Smearing Bias-Correction"]
+    E2["Compute Trimmed R² & ROC-AUC\nvia evaluation/metrics.py"]
+    E3["Permutation testing\nvia tools/permutation_test.py"]
   end
 
   S1 --> S2 --> D1
@@ -183,6 +188,9 @@ This repository includes a standalone interactive portfolio (`portfolio.html`). 
 
 ```text
 .
+├── evaluation/                # Official Metrical Validation & Outlier Robustness
+│   └── metrics.py             # R², MAE (log-space), Trimmed R², and Classification ROC-AUC from Regression
+│
 ├── models/                    # Core PyTorch Neural Network Architectures
 │   ├── simple_gnn.py          # Baseline 1: Standard message passing Mean-aggregation (Homophily)
 │   ├── gcn_model.py           # Baseline 2: Graph Convolutional Network (Spectral filtering)
@@ -215,7 +223,6 @@ This repository includes a standalone interactive portfolio (`portfolio.html`). 
 │   └── geo/                   # GeoJSON WGS84 geographic shapes for the 5,564 municipalities
 │
 ├── run_global_gat.py          # ⚙️ MAIN ENTRY POINT: epoch iteration, Huber loss optimization, evaluations
-├── extract_reports.py         # Utility for PDF/Docx documentation conversion
 ├── portfolio.html             # ➔ INTERACTIVE RESEARCH PORTFOLIO (Open in browser)
 └── README.md                  # This documentation
 ```

@@ -3,7 +3,7 @@ import glob, os, torch
 SNAP_DIR = "data/processed/weekly_pt_scaled"
 paths = sorted(glob.glob(os.path.join(SNAP_DIR, "*.pt")))
 
-# weights_only=True (nếu snapshot chỉ chứa tensor/list đơn giản thì OK)
+# weights_only=True (if snapshot only contains simple tensor/list then OK)
 try:
     d = torch.load(paths[0], map_location="cpu", weights_only=True)
 except TypeError:

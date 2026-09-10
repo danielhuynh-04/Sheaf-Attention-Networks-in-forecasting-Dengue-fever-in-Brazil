@@ -1,11 +1,11 @@
-# utils/buoc4_check_scaled.py
+# utils/step4_check_scaled.py
 # ---------------------------
-# BƯỚC 4: Kiểm tra snapshot đã scale (weekly_pt_scaled)
-# - Đọc node2idx.json, scaler_weekly.json
-# - Duyệt toàn bộ *.pt trong data/processed/weekly_pt_scaled
-# - Kiểm tra: khóa bắt buộc, shape x/y, NaN/Inf, masks, số feature, geocodes khớp
-# - Xuất báo cáo CSV để rà soát nhanh
-
+# STEP 4: Validate Scaled Snapshots (weekly_pt_scaled)
+# - Load node2idx.json and scaler_weekly.json
+# - Iterate through all *.pt files in data/processed/weekly_pt_scaled
+# - Validation checklist: required keys, x/y shape integrity, NaN/Inf bounds, masks, feature dimension, geocode structural match
+# - Export CSV diagnostic report for rapid auditing
+# ---------------------------
 import os
 import json
 import glob
@@ -23,46 +23,46 @@ SCALER_PATH = os.path.join(PROCESSED_DIR, "scaler_weekly.json")
 os.makedirs(INTERIM_DIR, exist_ok=True)
 
 def _safe_load_pt(path):
-    # PyTorch khuyến nghị dùng weights_only=True để tránh cảnh báo pickle
+    # weights_only=True structurally isolates execution during deserialization
     try:
         return torch.load(path, map_location="cpu", weights_only=True)
     except TypeError:
-        # fallback cho phiên bản torch cũ không có tham số weights_only
+        # Fallback handling for early torch versions lacking parameter inclusion
         return torch.load(path, map_location="cpu")
 
 def _check_masks(train_mask, val_mask, test_mask):
     tm = train_mask.numpy().astype(bool)
     vm = val_mask.numpy().astype(bool)
     sm = test_mask.numpy().astype(bool)
-    # mutually exclusive
+    # Verification of mutually exclusive temporal boundaries
     overlap = (tm & vm) | (tm & sm) | (vm & sm)
     return not overlap.any()
 
 def main():
-    # 1) Load node2idx
+    # 1) Reconstruct index mapping hierarchy
     if not os.path.exists(NODE2IDX_PATH):
-        raise FileNotFoundError(f"Missing {NODE2IDX_PATH}")
+        raise FileNotFoundError(f"Missing global {NODE2IDX_PATH} spatial representation index.")
     with open(NODE2IDX_PATH, "r", encoding="utf-8") as f:
         node2idx = json.load(f)
     idx2node = [k for k, v in sorted(node2idx.items(), key=lambda kv: kv[1])]
     N = len(idx2node)
-    print(f"✅ node2idx loaded: N={N}")
+    print(f"✅ Indexed node representations aligned: N={N}")
 
-    # 2) Load scaler meta
+    # 2) Extract structural scaling bounds
     if not os.path.exists(SCALER_PATH):
-        raise FileNotFoundError(f"Missing {SCALER_PATH}")
+        raise FileNotFoundError(f"Missing {SCALER_PATH} matrix bounds configuration.")
     with open(SCALER_PATH, "r", encoding="utf-8") as f:
         scaler_meta = json.load(f)
     scaler_feats = scaler_meta.get("feature_cols", [])
-    print(f"✅ scaler_weekly.json loaded with {len(scaler_feats)} features")
+    print(f"✅ Found bounding scaler configuration encapsulating {len(scaler_feats)} spatial features")
 
-    # 3) Scan scaled snapshots
+    # 3) Initialize snapshot auditing protocol
     paths = sorted(glob.glob(os.path.join(PT_DIR, "*.pt")))
     if not paths:
-        raise FileNotFoundError(f"No snapshots found in {PT_DIR}")
-    print(f"Found {len(paths)} snapshots in {PT_DIR}")
+        raise FileNotFoundError(f"Missing computed scaling sequences in directory structure: {PT_DIR}")
+    print(f"Identified {len(paths)} target sequences under {PT_DIR}")
 
-    # 4) Iterate & validate
+    # 4) Iterate framework integration tests
     rows = []
     required_keys = {
         "x","y","edge_index","year","epiweek","feature_cols",
@@ -75,7 +75,7 @@ def main():
 
         missing = required_keys - set(d.keys())
         if missing:
-            print(f"❌ {os.path.basename(p)} missing keys: {missing}")
+            print(f"❌ {os.path.basename(p)} Missing mandatory key signatures: {missing}")
             issues += 1
             continue
 
@@ -85,37 +85,37 @@ def main():
         tm, vm, sm = d["train_mask"], d["val_mask"], d["test_mask"]
         year = d["year"]; epiweek = d["epiweek"]
 
-        # shapes
+        # Mathematical projection constraint bounds
         ok_shape = True
         if x.ndim != 2 or x.shape[0] != N:
             ok_shape = False
-            print(f"❌ {os.path.basename(p)}: bad x shape {tuple(x.shape)}")
+            print(f"❌ {os.path.basename(p)}: Spatial mapping corrupted - invalid x dimensionality {tuple(x.shape)}")
         if y.ndim != 1 or y.shape[0] != N:
             ok_shape = False
-            print(f"❌ {os.path.basename(p)}: bad y shape {tuple(y.shape)}")
+            print(f"❌ {os.path.basename(p)}: Target label constraint breached {tuple(y.shape)}")
 
-        # feature count
+        # Validate feature counts internally against meta parameter counts
         F = x.shape[1] if x.ndim == 2 else -1
         if len(feat_cols) != F:
             ok_shape = False
-            print(f"❌ {os.path.basename(p)}: feature_cols({len(feat_cols)}) != x.F({F})")
+            print(f"❌ {os.path.basename(p)}: Feature density discrepancy feat_cols({len(feat_cols)}) != mapped_tensor({F})")
 
-        # scaler match
+        # Validation matrix bounding box
         ok_scaler = (feat_cols == scaler_feats)
         if not ok_scaler:
-            print(f"⚠️  {os.path.basename(p)}: feature_cols not equal to scaler feature list")
+            print(f"⚠️  {os.path.basename(p)}: Local feature structure violated global normalization definitions")
 
-        # geocode alignment
+        # Global geocode projection alignment
         ok_geo = (len(geocodes) == N and list(geocodes) == idx2node)
         if not ok_geo:
-            print(f"❌ {os.path.basename(p)}: geocodes misaligned")
+            print(f"❌ {os.path.basename(p)}: Geocode misalignment inside feature index mapping boundary")
 
-        # masks mutual exclusivity
+        # Ensure no temporal information leakage across ML constraints
         ok_masks = _check_masks(tm, vm, sm)
         if not ok_masks:
-            print(f"❌ {os.path.basename(p)}: masks overlap")
+            print(f"❌ {os.path.basename(p)}: Information leakage detected - conflicting training/validation/test masking")
 
-        # NaN/Inf checks
+        # NaN/Inf runtime mathematical check execution constraints
         x_np = x.numpy()
         y_np = y.numpy()
         nan_x = int(np.isnan(x_np).sum())
@@ -124,7 +124,7 @@ def main():
         inf_y = int(np.isinf(y_np).sum())
 
         if nan_x or inf_x or nan_y or inf_y:
-            print(f"❌ {os.path.basename(p)}: NaN/Inf x({nan_x}/{inf_x}) y({nan_y}/{inf_y})")
+            print(f"❌ {os.path.basename(p)}: NaN/Inf value leakage x({nan_x}/{inf_x}) y({nan_y}/{inf_y})")
             issues += 1
 
         rows.append({
@@ -146,21 +146,21 @@ def main():
             "ok_masks": ok_masks,
         })
 
-    # 5) Report
+    # 5) CSV Output Matrix Generation
     rep = pd.DataFrame(rows).sort_values(["year","epiweek"])
     out_csv = os.path.join(INTERIM_DIR, "check_weekly_pt_scaled_report.csv")
     rep.to_csv(out_csv, index=False)
-    print(f"✅ Wrote report: {out_csv}")
+    print(f"✅ Generated Scaled Dataset Diagnostic Report: {out_csv}")
 
     # Summary
     bad = rep[~(rep["ok_shape"] & rep["ok_scaler"] & rep["ok_geo"] & rep["ok_masks"])]
     if len(bad) == 0 and rep[["nan_x","inf_x","nan_y","inf_y"]].to_numpy().sum() == 0:
-        print("🎉 All scaled snapshots look good.")
+        print("🎉 Matrix integration test fully succeeded. All scaled snapshots structurally valid.")
     else:
-        print(f"⚠️  Found potential issues in {len(bad)} files. See report for details.")
+        print(f"⚠️  Isolated structural faults across {len(bad)} serialized checkpoints. Further analysis required.")
 
-    # Quick glance
-    print("\nSanity (first & last rows):")
+    # Execution matrix short tail logging
+    print("\nSanity Audit Bounds:")
     print(rep.head(3).to_string(index=False))
     print("...")
     print(rep.tail(3).to_string(index=False))

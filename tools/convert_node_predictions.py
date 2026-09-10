@@ -50,11 +50,11 @@ NODE_DS_DIR = PARQUET_DIR / "node_predictions_ds"
 # ======================
 # THÔNG SỐ KỸ THUẬT
 # ======================
-NODE_CHUNK_SIZE = 200_000     # phù hợp RAM 16GB
+NODE_CHUNK_SIZE = 200_000     # Suitable for 16GB RAM
 ROW_GROUP = 128_000
 MAX_ROWS_PER_FILE = 2_000_000
 PARQUET_COMPRESSION = "zstd"
-PARTITION_KEYS = ["Year", "Epiweek"]  # sẽ dùng schema cho Hive
+PARTITION_KEYS = ["Year", "Epiweek"]  # will use schema for Hive
 
 # ======================
 # TIỆN ÍCH
@@ -88,7 +88,7 @@ def _parquet_write_table(tbl: pa.Table, out_path: pathlib.Path, *, row_group_siz
     )
 
 def _make_parquet_write_options() -> ds.FileWriteOptions:
-    # PyArrow 21+: tạo write_options qua FileFormat
+    # PyArrow 21+: create write_options via FileFormat
     fmt = ds.ParquetFileFormat()
     return fmt.make_write_options(compression=PARQUET_COMPRESSION)
 
@@ -169,7 +169,7 @@ def _coerce_node_df(df: pd.DataFrame) -> pd.DataFrame:
                     df[col] = df[col].astype("string")
             except Exception:
                 pass
-    # bắt buộc 2 cột partition
+    # 2 partition columns required
     for col in PARTITION_KEYS:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce").astype("Int64").astype("float").astype("int64")
@@ -182,7 +182,7 @@ def convert_weekly_csv():
     if not WEEKLY_CSV.exists():
         print(f"[WEEKLY] SKIP (not found): {WEEKLY_CSV}")
         return
-    print(f"[WEEKLY] Đọc: {WEEKLY_CSV}")
+    print(f"[WEEKLY] Read: {WEEKLY_CSV}")
     df = pd.read_csv(WEEKLY_CSV)
     df = _normalize_year_epi(df)
     tbl = pa.Table.from_pandas(df, preserve_index=False)
@@ -196,7 +196,7 @@ def convert_summary():
     if not SUMMARY_JSON.exists():
         print(f"[SUMMARY] SKIP (not found): {SUMMARY_JSON}")
         return
-    print("[SUMMARY] Đọc JSON summary...")
+    print("[SUMMARY] Read JSON summary...")
     with open(SUMMARY_JSON, "r", encoding="utf-8") as f:
         data = json.load(f)
     print(f"[SUMMARY] -> {SUMMARY_JSONL} & {SUMMARY_PARQUET}")
@@ -214,14 +214,14 @@ def convert_node_predictions():
         print(f"[NODE] SKIP (not found): {NODE_CSV}")
         return
 
-    print(f"[NODE] Bắt đầu chuyển -> dataset: {NODE_DS_DIR}")
+    print(f"[NODE] Start transfer -> dataset: {NODE_DS_DIR}")
     if NODE_DS_DIR.exists():
-        print(f"[NODE] Xóa dataset cũ: {NODE_DS_DIR}")
+        print(f"[NODE] Delete old dataset: {NODE_DS_DIR}")
         shutil.rmtree(NODE_DS_DIR, ignore_errors=True)
     _ensure_dir(NODE_DS_DIR)
 
     # *** SỬA LỖI TẠI ĐÂY ***
-    # PyArrow 21: với flavor="hive" KHÔNG được dùng field_names, phải dùng schema:
+    # PyArrow 21: with flavor="hive" DO NOT use field_names, must use schema:
     part_schema = pa.schema([
         pa.field("Year", pa.int64()),
         pa.field("Epiweek", pa.int64()),
@@ -230,7 +230,7 @@ def convert_node_predictions():
 
     est_rows = _estimate_csv_rows(NODE_CSV, sample_lines=200_000)
     if est_rows:
-        print(f"[NODE] Ước lượng tổng số dòng: {est_rows:,}")
+        print(f"[NODE] Estimated total number of rows: {est_rows:,}")
 
     dtype_map = _node_dtype_pandas()
     shard_idx = 0
@@ -242,7 +242,7 @@ def convert_node_predictions():
 
         missing = [c for c in PARTITION_KEYS if c not in df.columns]
         if missing:
-            raise ValueError(f"Thiếu cột partition {missing} trong node_predictions.csv!")
+            raise ValueError(f"Missing column partition {missing} in node_predictions.csv!")
 
         tbl = pa.Table.from_pandas(df, preserve_index=False)
 
@@ -266,7 +266,7 @@ def convert_node_predictions():
             print(f"[NODE] Chunk {chunk_idx:05d} | +{len(df):,} rows | total {processed_rows:,}")
 
     dt = time.time() - t0
-    print(f"[NODE] Hoàn tất. Tổng {processed_rows:,} dòng → {NODE_DS_DIR} | {dt:.1f}s")
+    print(f"[NODE] Completed.Total {processed_rows:,} rows → {NODE_DS_DIR} |{dt:.1f}s")
 
 # ======================
 # MAIN
@@ -276,7 +276,7 @@ def main():
     convert_weekly_csv()
     convert_summary()
     convert_node_predictions()
-    print("\n✅ DONE: Tất cả file đã được chuyển sang Parquet/JSONL cho trực quan hóa.")
+    print("\n✅ DONE: All files have been converted to Parquet/JSONL for visualization.")
 
 if __name__ == "__main__":
     main()

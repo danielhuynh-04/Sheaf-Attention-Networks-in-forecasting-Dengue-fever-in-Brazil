@@ -4,8 +4,8 @@ import os, glob
 import numpy as np
 import pandas as pd
 
-# ====== CONFIG: chỉnh đúng thư mục raw weekly theo năm của bạn ======
-RAW_YEARLY_DIR = "data/interim/yearly"   # ví dụ: data/interim/yearly/weekly_2010.csv
+# ====== CONFIG: correct raw weekly folder according to your year ======
+RAW_YEARLY_DIR = "data/interim/yearly"   # for example: data/interim/yearly/weekly_2010.csv
 PATTERN = "weekly_*.csv"
 YEAR_MIN, YEAR_MAX = 2010, 2024
 
@@ -19,12 +19,12 @@ os.makedirs(OUT_DIR, exist_ok=True)
 
 
 def _safe_read_csv(path: str) -> pd.DataFrame:
-    # cố gắng đọc nhanh & ổn định
+    # Try to read quickly and steadily
     return pd.read_csv(path, low_memory=False)
 
 
 def _ensure_cols(df: pd.DataFrame) -> pd.DataFrame:
-    # chuẩn hoá tên cột hay gặp
+    # standardize common column names
     rename = {}
     for c in df.columns:
         lc = c.lower().strip()
@@ -37,7 +37,7 @@ def _ensure_cols(df: pd.DataFrame) -> pd.DataFrame:
     if rename:
         df = df.rename(columns=rename)
 
-    # ép kiểu tối thiểu
+    # minimal styling
     if "geocode" in df.columns:
         df["geocode"] = df["geocode"].astype(str).str.strip()
     if "year" in df.columns:
@@ -57,7 +57,7 @@ def _quantiles(s: pd.Series, qs=(0, 0.25, 0.5, 0.75, 0.9, 0.95, 0.99, 1.0)) -> d
 
 
 def per_year_stats(df: pd.DataFrame, year: int) -> tuple[dict, pd.DataFrame]:
-    # bắt buộc tối thiểu: geocode, epiweek, casos
+    # Minimum required: geocode, epiweek, casos
     required = ["geocode", "epiweek", "casos"]
     missing_required = [c for c in required if c not in df.columns]
 
@@ -65,7 +65,7 @@ def per_year_stats(df: pd.DataFrame, year: int) -> tuple[dict, pd.DataFrame]:
     n_geo = df["geocode"].nunique() if "geocode" in df.columns else np.nan
     n_weeks = df["epiweek"].nunique() if "epiweek" in df.columns else np.nan
 
-    # độ phân giải geocode×epiweek
+    # geocode×epiweek resolution
     res_expected = (n_geo * n_weeks) if (pd.notna(n_geo) and pd.notna(n_weeks)) else np.nan
     res_actual = df.dropna(subset=["geocode", "epiweek"]).drop_duplicates(["geocode", "epiweek"]).shape[0] if ("geocode" in df.columns and "epiweek" in df.columns) else np.nan
     coverage = (res_actual / res_expected) if (isinstance(res_expected, (int, float)) and res_expected and pd.notna(res_actual)) else np.nan
@@ -89,13 +89,13 @@ def per_year_stats(df: pd.DataFrame, year: int) -> tuple[dict, pd.DataFrame]:
     for c in df.columns:
         miss_rates[f"miss_{c}"] = float(df[c].isna().mean())
 
-    # kiểm tra thiếu khóa geocode×epiweek (nếu muốn “độ phủ”)
+    # check for missing geocode×epiweek key (if you want “coverage”)
     missing_keys_df = pd.DataFrame()
     if ("geocode" in df.columns) and ("epiweek" in df.columns):
         weeks = sorted(df["epiweek"].dropna().astype(int).unique().tolist())
         geos = sorted(df["geocode"].dropna().astype(str).unique().tolist())
         present = set(zip(df["geocode"].astype(str), df["epiweek"].astype(int)))
-        # Chỉ liệt kê thiếu theo tuần (nhẹ hơn): mỗi tuần thiếu bao nhiêu geocode
+        # Only list missing by week (lighter): how many geocodes are missing each week
         rows = []
         for w in weeks:
             cnt_present = sum(((g, w) in present) for g in geos)
@@ -126,7 +126,7 @@ def per_year_stats(df: pd.DataFrame, year: int) -> tuple[dict, pd.DataFrame]:
 
 def main():
     files = sorted(glob.glob(os.path.join(RAW_YEARLY_DIR, PATTERN)))
-    # lọc đúng 2010..2024
+    # correct filter 2010..2024
     year_files = []
     for f in files:
         base = os.path.basename(f).replace(".csv", "")
@@ -140,7 +140,7 @@ def main():
     year_files = sorted(year_files, key=lambda x: x[0])
 
     if not year_files:
-        raise FileNotFoundError(f"Không tìm thấy weekly_{YEAR_MIN}..weekly_{YEAR_MAX}.csv trong {RAW_YEARLY_DIR}")
+        raise FileNotFoundError(f"Weekly_{YEAR_MIN}..weekly_{YEAR_MAX}.csv not found in {RAW_YEARLY_DIR}")
 
     rows_year = []
     missing_week_rows = []
@@ -149,7 +149,7 @@ def main():
     for y, path in year_files:
         df = _safe_read_csv(path)
         df = _ensure_cols(df)
-        # nếu file không có year, bổ sung year từ filename
+        # If file does not have a year, add year from filename
         if "year" not in df.columns:
             df["year"] = y
 
@@ -159,7 +159,7 @@ def main():
         if not miss_week_df.empty:
             missing_week_rows.append(miss_week_df)
 
-        # giữ lại để thống kê overall (nhưng hạn chế cột nặng nếu file quá lớn)
+        # keep for overall statistics (but limit heavy columns if file is too large)
         keep_cols = [c for c in df.columns if c in ["geocode", "year", "epiweek", "casos"] or c.lower().endswith("_med") or c.lower() in ["precip_tot", "rainy_days", "temp_med", "rel_humid_med"]]
         if keep_cols:
             all_df_list.append(df[keep_cols].copy())
@@ -213,7 +213,7 @@ def main():
         if not missing_by_week.empty:
             missing_by_week.to_excel(writer, sheet_name="MISSING_BY_WEEK", index=False)
 
-        # thêm sheet: top years theo max cases
+        # add sheet: top years according to max cases
         top_max = by_year[["year","casos_max","casos_mean","casos_zero_rate","rows","unique_geocodes","unique_epiweeks"]].sort_values("casos_max", ascending=False)
         top_max.to_excel(writer, sheet_name="TOP_EXTREMES_BY_YEAR", index=False)
 

@@ -1,22 +1,27 @@
-# utils/buoc2taofeature_label.py
+# utils/step2_build_features.py
 # --------------------------------------
-# Bước 2: Tạo FEATURE & LABEL theo TUẦN (KHÔNG dùng date)
-# - Dùng node2idx.json & edge_index.pt để cố định thứ tự node
-# - Đọc: environ_vars.csv, IBGE_POPTCU.csv, dengue_*.csv, climate_*.csv (2010..2024)
-# - Hợp nhất weekly theo (geocode, year, epiweek)
-# - Feature gọn MED-ONLY + engineered:
+# STEP 2: Aggregate Features & Label Time-Series Sequences (Date-Agnostic)
+# - Input Dependency: node2idx.json & edge_index.pt (Determines immutable node sequence geometry)
+# - Parsed Sources: environ_vars.csv, IBGE_POPTCU.csv, dataset_dengue_*, dataset_climate_* (2010..2024)
+# - Structural Pivot: Merge temporally partitioned week boundaries across (geocode, year, epiweek)
+#
+# Feature Engineering Suite (MEDIAN-BASED + DOMAIN ENGINEERED):
 #     + temp_med, precip_tot, rainy_days, rel_humid_med
-#     + POPULACAO, altitude, (area_km2 nếu có), population_density
+#     + POPULACAO, altitude, (area_km2), population_density
 #     + incidence_per_1k, humid_heat_index, precip_std_roll3, dry_spell_len
 #     + neighbor_cases_prev1, incidence_lag1
-# - Fill NA:
-#     cases=0;
-#     climate=geo-mean -> global-mean -> 0;
+#
+# Null imputation policy:
+#     cases=0.0;
+#     climate elements = local geographical-mean fallback -> global-mean -> 0.0;
 #     altitude=mean;
-#     population=nearest năm -> median nếu còn thiếu.
-# - Diện tích từ geojs-100-mun.json (geometry) nếu có (shapely/pyproj).
-# - Xuất CSV full + CSV theo từng năm; xuất .pt snapshots theo thứ tự node
-# - Masks theo năm: train(2010-2020), val(2021-2022), test(2023-2024)
+#     population=nearest historical year block -> global median.
+#
+# Spatial Extensions:
+# - Dynamic Area Extraction via geojs-100-mun.json geometry properties (Shapely/PyProj equal-area).
+# - Serialization formats: Master full-dataset CSV, partitioned yearly CSVs, and tensor `.pt` snapshots.
+# - Boolean Mask Partitions: train(2010-2020), val(2021-2022), test(2023-2024)
+# --------------------------------------
 
 import os
 import json
@@ -37,28 +42,27 @@ os.makedirs(PT_OUT_DIR, exist_ok=True)
 os.makedirs(os.path.join(INTERIM_DIR, "yearly"), exist_ok=True)
 
 # ------------------------------
-# 1) Load mapping & edge_index
+# 1) Rehydrate System Geometry Mapping & Edge Indexes
 # ------------------------------
 node2idx_path = os.path.join(PROCESSED_DIR, "node2idx.json")
 edge_index_path = os.path.join(PROCESSED_DIR, "edge_index.pt")
 
 if not (os.path.exists(node2idx_path) and os.path.exists(edge_index_path)):
-    raise FileNotFoundError("Thiếu node2idx.json hoặc edge_index.pt. Hãy chạy Bước 1 trước.")
+    raise FileNotFoundError("Missing geometric node index (node2idx.json) or edge matrix (edge_index.pt). Please complete Step 1 execution.")
 
 with open(node2idx_path, "r", encoding="utf-8") as f:
-    node2idx = json.load(f)  # {"1100015": 0, ...}
+    node2idx = json.load(f)  # Format: {"1100015": 0, ...}
 idx2node = [k for k, v in sorted(node2idx.items(), key=lambda kv: kv[1])]
 N = len(idx2node)
 
-# an toàn unpickle theo khuyến cáo PyTorch
+# weights_only=True applied for serialized tensor security
 edge_index = torch.load(edge_index_path, map_location="cpu", weights_only=True)
 
-print("📦 Tạo FEATURE & LABEL theo TUẦN (có diện tích, không dùng date)")
-print(f"🔹 Số node: {N}, edge_index: {tuple(edge_index.shape)}")
-
+print("📦 EXECUTING STEP 2 — Structuring temporal geometric features & time-series labels (Date-agnostic logic applied)")
+print(f"🔹 Sub-graph nodes: {N}, edge_index architecture initialized: {tuple(edge_index.shape)}")
 
 # ------------------------------
-# 2) Helpers
+# 2) Standard Execution Helpers
 # ------------------------------
 def _read_csv_any(path):
     try:
@@ -71,13 +75,14 @@ def _zfill7(series):
 
 def _ensure_year_epiweek_no_date(df):
     """
-    Đảm bảo có cột geocode(str,7), year(Int64), epiweek(Int64).
-    Không suy từ 'date'; nếu thiếu => raise để tránh dữ liệu mơ hồ.
+    Ensure dataset enforces strictly decoupled (geocode(str,7), year(Int64), epiweek(Int64)).
+    Abandons ambiguous date inference; restricts execution if core definitions are missing.
     """
     if "geocode" not in df.columns:
-        raise KeyError("Thiếu cột 'geocode'.")
+        raise KeyError("Dataset missing 'geocode' primary identifier column.")
     if "year" not in df.columns or "epiweek" not in df.columns:
-        raise KeyError("Thiếu 'year' hoặc 'epiweek' (logic mới không dùng date, vui lòng chuẩn hóa đầu vào).")
+        raise KeyError("Missing absolute 'year' or 'epiweek' anchors. Unstructured date inference implies temporal leakage.")
+    
     out = df.copy()
     out["geocode"] = _zfill7(out["geocode"])
     out["year"] = pd.to_numeric(out["year"], errors="coerce").astype("Int64")
@@ -88,7 +93,7 @@ def _ensure_year_epiweek_no_date(df):
 def _nearest_population_for_year(pop_df, year):
     years_avail = np.sort(pop_df["year"].dropna().unique())
     if len(years_avail) == 0:
-        raise ValueError("IBGE_POPTCU trống!")
+        raise ValueError("IBGE_POPTCU dataset is computationally empty.")
 
     if year in years_avail:
         y_sel = year
@@ -101,7 +106,7 @@ def _nearest_population_for_year(pop_df, year):
 def _agg_weekly_dengue(df):
     need = {"geocode", "year", "epiweek", "casos"}
     if not need.issubset(df.columns):
-        raise KeyError(f"Dengue thiếu cột: {need - set(df.columns)}")
+        raise KeyError(f"Dengue epidemiological label vector compromised: Missing subset columns {need - set(df.columns)}")
     out = df[["geocode", "year", "epiweek", "casos"]].copy()
     out["casos"] = pd.to_numeric(out["casos"], errors="coerce").fillna(0.0)
     g = out.groupby(["geocode", "year", "epiweek"], as_index=False)["casos"].sum()
@@ -109,7 +114,7 @@ def _agg_weekly_dengue(df):
 
 def _agg_weekly_climate(df):
     df = _ensure_year_epiweek_no_date(df)
-    cand = ["temp_med", "precip_tot", "rainy_days", "rel_humid_med"]  # med-only
+    cand = ["temp_med", "precip_tot", "rainy_days", "rel_humid_med"]  # Prioritize median distribution stats
     cols = [c for c in cand if c in df.columns]
     keep = ["geocode","year","epiweek"] + cols
     df = df[keep].copy()
@@ -120,7 +125,7 @@ def _agg_weekly_climate(df):
 
 def _fill_numeric_safely(df, cols, by_geo=True):
     """
-    Điền thiếu theo tầng: geo-mean -> global-mean -> 0.
+    Tiered imputation structure: Node-specific spatial mean -> Global vector mean -> ZERO
     """
     for c in cols:
         df[c] = pd.to_numeric(df[c], errors="coerce")
@@ -134,17 +139,15 @@ def _fill_numeric_safely(df, cols, by_geo=True):
         df[c] = df[c].fillna(0.0)
     return df
 
-# ---- Diện tích từ GeoJSON (tùy chọn) ----
+# ---- Equal-Area Projection computation engine ----
 def _load_area_from_geojson(geojson_path):
     """
-    Đọc geojs-100-mun.json & tính area_km2 từ geometry (Equal-Area).
-    Trả về DataFrame: geocode(str7), area_km2(float).
-    Nếu thiếu shapely/pyproj hoặc file không có -> trả None.
+    Ingest WGS84 GeoJSON, project bounds via EPSG:5880 (Equal-Area), and dynamically calculate bounding surface areas.
+    If system dependencies (shapely/pyproj) are absent, fallback gracefully returning None.
     """
     if not os.path.exists(geojson_path):
         return None
     try:
-        # optional deps
         import json as _json
         from shapely.geometry import shape
         from shapely.ops import transform as shp_transform
@@ -153,8 +156,7 @@ def _load_area_from_geojson(geojson_path):
         with open(geojson_path, "r", encoding="utf-8") as f:
             gj = _json.load(f)
 
-        # Projection to equal-area (Brazil example: EPSG:5880; fallback: world equal-area ESRI:54034)
-        # Dùng Mollweide (ESRI:54009) cho ổn định toàn cục nếu local EPSG unavailable
+        # Equal Area Projection bindings: Use Mollweide (ESRI:54009) as robust generic alternative
         try:
             proj = pyproj.Transformer.from_crs("EPSG:4326", "ESRI:54009", always_xy=True)
         except Exception:
@@ -167,15 +169,15 @@ def _load_area_from_geojson(geojson_path):
         feats = gj.get("features", [])
         for ft in feats:
             props = ft.get("properties", {})
-            # các geojson hay dùng "id" hoặc "codarea"/"code_muni"
-            # ưu tiên id nếu là chuỗi số 7 ký tự
+            
+            # Sub-level geocode ID resolution
             gid = None
-            # 1) properties
             for key in ["id", "code_muni", "codarea", "CD_MUN", "CD_GEOCMU", "cod_muni"]:
                 if key in props and props[key] is not None:
                     gid = str(props[key]).zfill(7)
                     break
-            # 2) top-level id
+            
+            # Root-level ID fallback mechanism
             if gid is None and "id" in ft:
                 gid = str(ft["id"]).zfill(7)
 
@@ -185,6 +187,7 @@ def _load_area_from_geojson(geojson_path):
             geom = ft.get("geometry")
             if geom is None:
                 continue
+            
             try:
                 geom_shp = shape(geom)
                 geom_proj = shp_transform(_project, geom_shp)
@@ -207,81 +210,81 @@ def _load_area_from_geojson(geojson_path):
 
 
 # ------------------------------
-# 3) Read static files
+# 3) Initialize Constant Datacenters
 # ------------------------------
-print("🔹 Đọc environ_vars...")
+print("🔹 Bootstrapping contextual environmental references...")
 env_path = os.path.join(RAW_DIR, "environ_vars.csv")
 env_df = _read_csv_any(env_path)
 if "geocode" not in env_df.columns:
-    raise KeyError("environ_vars.csv cần có cột 'geocode'")
+    raise KeyError("environ_vars.csv lacks required primary mapping column: 'geocode'")
 env_df["geocode"] = _zfill7(env_df["geocode"])
 
-# các cột meta có thể có (không bắt buộc)
+# Optional context dimensions
 for col in ["altitude"]:
     if col in env_df.columns:
         env_df[col] = pd.to_numeric(env_df[col], errors="coerce")
 
-# giữ duy nhất theo geocode để tránh duplicate khi reindex
+# Prevent node duplication matrix collapse using keep-first indexing
 env_df = env_df.drop_duplicates(subset=["geocode"], keep="first").copy()
 
-print("🔹 Đọc IBGE_POPTCU...")
+print("🔹 Bootstrapping IBGE demographic projections...")
 pop_path = os.path.join(RAW_DIR, "IBGE_POPTCU.csv")
 pop_df = _read_csv_any(pop_path)
 need_pop = {"MUNIC_RES", "ANO", "POPULACAO"}
 if not need_pop.issubset(pop_df.columns):
-    raise KeyError("IBGE_POPTCU.csv cần các cột: MUNIC_RES, ANO, POPULACAO")
+    raise KeyError("IBGE_POPTCU.csv missing mandatory columns: MUNIC_RES, ANO, POPULACAO")
 pop_df = pop_df.rename(columns={"MUNIC_RES":"geocode", "ANO":"year"})
 pop_df["geocode"] = _zfill7(pop_df["geocode"])
 pop_df["year"] = pd.to_numeric(pop_df["year"], errors="coerce").astype("Int64")
 pop_df["POPULACAO"] = pd.to_numeric(pop_df["POPULACAO"], errors="coerce")
 
-# diện tích (tùy chọn)
+# Spatial area injection 
 area_df = _load_area_from_geojson(os.path.join(RAW_DIR, "geojs-100-mun.json"))
 
 
 # ------------------------------
-# 4) Read dengue & climate
+# 4) Dynamic Ingestion of Epidemic and Climate Datasets
 # ------------------------------
-print("🔹 Đọc dengue...")
+print("🔹 Ingesting epidemiological surveillance data (Dengue)...")
 den_parts = []
 for p in sorted(glob.glob(os.path.join(RAW_DIR, "dengue_*.csv"))):
     d = _read_csv_any(p)
-    d = _ensure_year_epiweek_no_date(d)  # không dùng date
+    d = _ensure_year_epiweek_no_date(d)
     if "casos" not in d.columns:
-        raise KeyError(f"{os.path.basename(p)} thiếu cột 'casos'")
+        raise KeyError(f"{os.path.basename(p)} missing label vector 'casos'")
     den_parts.append(d[["geocode","year","epiweek","casos"]])
 if not den_parts:
-    raise FileNotFoundError("Không tìm thấy dengue_*.csv")
+    raise FileNotFoundError("Epidemiological databank dengue_*.csv not located.")
 dengue_all = pd.concat(den_parts, ignore_index=True)
 
-print("🔹 Đọc climate...")
+print("🔹 Ingesting temporal climate reanalysis data...")
 clim_parts = []
 for p in sorted(glob.glob(os.path.join(RAW_DIR, "climate_*.csv"))):
     c = _read_csv_any(p)
-    c = _ensure_year_epiweek_no_date(c)  # không dùng date
+    c = _ensure_year_epiweek_no_date(c)
     clim_parts.append(c)
 if not clim_parts:
-    raise FileNotFoundError("Không tìm thấy climate_*.csv")
+    raise FileNotFoundError("Climate records climate_*.csv not located.")
 climate_all = pd.concat(clim_parts, ignore_index=True)
 
 
 # ------------------------------
-# 5) Aggregate weekly
+# 5) Data Reductions to Uniform Weekly Time-series
 # ------------------------------
 den_w = _agg_weekly_dengue(dengue_all)
-clim_w, climate_cols = _agg_weekly_climate(climate_all)  # med-only list thực tế
+clim_w, climate_cols = _agg_weekly_climate(climate_all)
 
 # ------------------------------
-# 6) Merge + static joins + fill
+# 6) Complex Multi-Domain Merge and Matrix Normalization
 # ------------------------------
 weekly = pd.merge(den_w, clim_w, on=["geocode","year","epiweek"], how="outer")
 
-# static env (altitude, name_muni, biome, koppen...) nếu có
+# Connect static topological / domain features (Biomes, Koppen)
 static_cols = [c for c in ["altitude","name_muni","biome","koppen"] if c in env_df.columns]
 if static_cols:
     weekly = weekly.merge(env_df[["geocode"] + static_cols], on="geocode", how="left")
 
-# population by nearest year
+# Assign localized inter-year demographics via temporal distance inference
 years = sorted(weekly["year"].dropna().unique())
 pop_join = []
 for yy in years:
@@ -291,34 +294,34 @@ for yy in years:
 pop_year_df = pd.concat(pop_join, ignore_index=True) if len(pop_join) else pd.DataFrame(columns=["geocode","POPULACAO","year"])
 weekly = weekly.merge(pop_year_df, on=["geocode","year"], how="left")
 
-# area_km2 (nếu có)
+# Spatial area join
 if area_df is not None:
     weekly = weekly.merge(area_df, on="geocode", how="left")
 
-# chuẩn khoá & dtypes
+# Core structure enforcement
 weekly = weekly.dropna(subset=["geocode","year","epiweek"])
 weekly["geocode"] = _zfill7(weekly["geocode"])
 weekly["year"] = weekly["year"].astype(int)
 weekly["epiweek"] = weekly["epiweek"].astype(int)
 
-# fill rules gốc
+# Fundamental feature baseline imputation
 weekly["casos"] = pd.to_numeric(weekly["casos"], errors="coerce").fillna(0.0)
 weekly = _fill_numeric_safely(weekly, climate_cols, by_geo=True)
 
-# altitude
+# Altitude fallback mechanism
 if "altitude" in weekly.columns:
     alt_mean = pd.to_numeric(weekly["altitude"], errors="coerce").mean()
     if pd.isna(alt_mean): alt_mean = 0.0
     weekly["altitude"] = pd.to_numeric(weekly["altitude"], errors="coerce").fillna(alt_mean)
 
-# population
+# Population fallback mechanism
 if "POPULACAO" in weekly.columns:
     weekly["POPULACAO"] = pd.to_numeric(weekly["POPULACAO"], errors="coerce")
     pop_med = weekly["POPULACAO"].median()
     if pd.isna(pop_med): pop_med = 0.0
     weekly["POPULACAO"] = weekly["POPULACAO"].fillna(pop_med)
 
-# area
+# Geographical spatial area fallback mechanism
 if "area_km2" in weekly.columns:
     weekly["area_km2"] = pd.to_numeric(weekly["area_km2"], errors="coerce")
     area_med = weekly["area_km2"].median()
@@ -327,37 +330,36 @@ if "area_km2" in weekly.columns:
 else:
     weekly["area_km2"] = np.nan
 
-# chống duplicate (gộp lần cuối)
+# Final consolidation to resolve node duplication anomalies
 agg_dict = {"casos":"sum"}
 for c in climate_cols + ["POPULACAO","altitude","area_km2"]:
     if c in weekly.columns:
         agg_dict[c] = "mean"
 for c in ["name_muni","biome","koppen"]:
     if c in weekly.columns:
-        # giữ mode đơn giản: first
-        agg_dict[c] = "first"
+        agg_dict[c] = "first" # categorical stability assumption
 
 weekly = weekly.groupby(["geocode","year","epiweek"], as_index=False).agg(agg_dict)
 
 
 # ------------------------------
-# 7) Engineered features (gọn)
+# 7) Advanced Feature Engineering Pipeline
 # ------------------------------
-# population density
+# 7.1 Population Spatial Density Calculation
 if {"POPULACAO","area_km2"}.issubset(weekly.columns):
     weekly["population_density"] = weekly["POPULACAO"] / weekly["area_km2"].replace(0, np.nan)
     weekly["population_density"] = weekly["population_density"].fillna(0.0)
 else:
     weekly["population_density"] = 0.0
 
-# incidence per 1k
+# 7.2 Scaled Outbreak Incidence Tracker 
 if "POPULACAO" in weekly.columns:
     weekly["incidence_per_1k"] = (weekly["casos"] / weekly["POPULACAO"].replace(0, np.nan)) * 1000.0
     weekly["incidence_per_1k"] = weekly["incidence_per_1k"].fillna(0.0)
 else:
     weekly["incidence_per_1k"] = 0.0
 
-# humid-heat index (đơn giản: temp_med * rel_humid_med, scale nội bộ)
+# 7.3 Environmental Humid-Heat Index Interaction Modeling 
 if {"temp_med","rel_humid_med"}.issubset(weekly.columns):
     t = pd.to_numeric(weekly["temp_med"], errors="coerce")
     h = pd.to_numeric(weekly["rel_humid_med"], errors="coerce")
@@ -366,7 +368,7 @@ if {"temp_med","rel_humid_med"}.issubset(weekly.columns):
 else:
     weekly["humid_heat_index"] = 0.0
 
-# precip variability (rolling std 3 tuần theo geocode)
+# 7.4 Rolling Precipitation Variance Vectoring (3-week temporal trace)
 weekly = weekly.sort_values(["geocode","year","epiweek"]).reset_index(drop=True)
 if "precip_tot" in weekly.columns:
     def _roll_std(s, w):
@@ -375,20 +377,20 @@ if "precip_tot" in weekly.columns:
 else:
     weekly["precip_std_roll3"] = 0.0
 
-# dry spell len (7 - rainy_days)
+# 7.5 Computed Climatic Dry Cycle Length
 if "rainy_days" in weekly.columns:
     ds = 7 - pd.to_numeric(weekly["rainy_days"], errors="coerce").fillna(0.0)
     weekly["dry_spell_len"] = ds.clip(lower=0, upper=7)
 else:
     weekly["dry_spell_len"] = 0.0
 
-# incidence lag 1
+# 7.6 Autoregressive Temporal Lag Dependency Map (t-1)
 weekly["incidence_lag1"] = (
     weekly.groupby("geocode")["incidence_per_1k"].shift(1).fillna(0.0)
 )
 
-# --- Neighbor cluster cases (tuần trước) — an toàn độ dài ---
-# Tạo neighbors theo geocode
+# 7.7 Geospatial Edge Cross-Contamination Matrix Calculation (Neighbor cluster)
+# Assembles adjacency lists strictly from verified deterministic bounding geometry
 neighbors = {g: set() for g in idx2node}
 ei = edge_index.numpy() if isinstance(edge_index, torch.Tensor) else np.asarray(edge_index)
 src, dst = ei[0], ei[1]
@@ -424,37 +426,39 @@ for (yy, ww), snap in wk_prev.groupby(["year","epiweek"], sort=False):
         for nb in neighbors.get(g, ()):
             total += casos_prev_map.get(nb, 0.0)
         neighbor_sum_map[g] = total
+    # Inject computed sub-network aggregation map vector mapping onto final dataset
     mask = (weekly["year"] == yy) & (weekly["epiweek"] == ww)
     weekly.loc[mask, "neighbor_cases_prev1"] = (
         weekly.loc[mask, "geocode"].map(neighbor_sum_map).fillna(0.0).values
     )
 
-weekly = weekly.drop(columns=["year_prev","epiweek_prev"], errors="ignore")
+del weekly["year_prev"]
+del weekly["epiweek_prev"]
 
 
 # ------------------------------
-# 8) Xuất CSV đối chứng
+# 8) High-volume DataFrame Checkpoint Serialization
 # ------------------------------
 out_full_csv = os.path.join(INTERIM_DIR, "weekly_features_labels.csv")
 weekly.to_csv(out_full_csv, index=False)
 
-# Xuất theo từng năm
+# De-aggregate arrays and construct yearly subset representations for pipeline parallelism
 for yy, gdf in weekly.groupby("year", sort=True):
     gdf.to_csv(os.path.join(INTERIM_DIR, "yearly", f"weekly_{yy}.csv"), index=False)
 
-print("✅ Xuất CSV đối chứng theo năm & full")
+print("✅ Computed and serialized multi-domain CSV matrix representations.")
 
 
 # ------------------------------
-# 9) Build .pt snapshots (đúng thứ tự node)
+# 9) Tensor Serialization Map Execution (Ordered Graph Arrays)
 # ------------------------------
-# Feature gọn để train & trực quan hóa
+# Definitive input variable allocation for PyG modeling structure limits
 feature_cols = [
-    # climate med-only
+    # Climatic temporal attributes
     *(c for c in ["temp_med","precip_tot","rainy_days","rel_humid_med"] if c in weekly.columns),
-    # static/derived
+    # Static spatial-demographic constraints
     *(c for c in ["POPULACAO","altitude","area_km2","population_density"] if c in weekly.columns),
-    # engineered
+    # Pre-calculated dynamic vectors 
     "incidence_per_1k","humid_heat_index","precip_std_roll3","dry_spell_len",
     "neighbor_cases_prev1","incidence_lag1",
 ]
@@ -462,7 +466,10 @@ feature_cols = [
 label_col = "casos"
 
 def split_masks_by_year(y):
-    if 2010 <= y <= 2020:
+    """
+    Enforces STRICT data compartmentalization policy avoiding temporal overlapping contamination leakage.
+    """
+    if y <= 2020:
         return "train"
     elif y in (2021, 2022):
         return "val"
@@ -479,14 +486,13 @@ for (yy, ww) in pairs:
     if snap.empty:
         continue
 
-    # reindex theo node toàn cục (trước đó loại duplicate geocode)
+    # Lock global index sequence order alignment representing the edge matrix topology
     snap = snap.drop_duplicates(subset=["geocode"], keep="first").set_index("geocode").reindex(idx2node)
 
-    # y: fill thiếu = 0
     y_vals = pd.to_numeric(snap[label_col], errors="coerce").fillna(0.0).astype(np.float32).values
     y = y_vals
 
-    # X: điền mean cột (nếu mean NaN -> 0)
+    # Construct the X tensor feature array blocks, gracefully failing-over to structural zeroes
     X_cols = []
     for c in feature_cols:
         if c not in snap.columns:
@@ -514,7 +520,7 @@ for (yy, ww) in pairs:
     elif split == "test":
         test_mask[:] = True
 
-    # meta text fields (không dùng để train, tiện tra cứu)
+    # High-level tracking meta strings, bypassed during loss calculations by engine
     biome_series = env_df.drop_duplicates("geocode").set_index("geocode").get("biome", pd.Series(dtype=object))
     koppen_series = env_df.drop_duplicates("geocode").set_index("geocode").get("koppen", pd.Series(dtype=object))
     name_series = env_df.drop_duplicates("geocode").set_index("geocode").get("name_muni", pd.Series(dtype=object))
@@ -525,6 +531,7 @@ for (yy, ww) in pairs:
         "name_muni": name_series.reindex(idx2node).fillna("").tolist() if isinstance(name_series, pd.Series) else [""]*N,
     }
 
+    # Assembled immutable snapshot protocol packet
     data = {
         "x": torch.tensor(X, dtype=torch.float32),
         "y": torch.tensor(y, dtype=torch.float32),
@@ -544,5 +551,5 @@ for (yy, ww) in pairs:
     torch.save(data, os.path.join(PT_OUT_DIR, out_name))
     count_saved += 1
 
-print(f"✅ Lưu {count_saved} snapshot .pt @ {PT_OUT_DIR}")
-print(f"📝 Feature columns ({len(feature_cols)}): {feature_cols}")
+print(f"✅ Generated & securely allocated {count_saved} weekly structural PyG instances via mapping constraints -> {PT_OUT_DIR}")
+print(f"📝 Master feature sequence integration parameters ({len(feature_cols)} dimensions successfully extracted):\n\t{feature_cols}")

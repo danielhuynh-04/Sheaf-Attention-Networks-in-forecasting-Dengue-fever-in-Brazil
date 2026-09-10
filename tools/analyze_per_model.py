@@ -132,8 +132,8 @@ def main():
     parser.add_argument("--interim_dir", type=str, default="data/interim")
     parser.add_argument("--out_dir", type=str, default="visualizations/plots")
     parser.add_argument("--models", nargs="*", default=None,
-                        help="Chỉ phân tích các model này (vd: gnn gcn gat sheaf sheaf_conn). Nếu bỏ trống -> lấy hết.")
-    parser.add_argument("--topk", type=int, default=10, help="Top-k tuần tốt/xấu để xuất")
+                        help="Analyze only these models (e.g. gnn gcn gat sheaf sheaf_conn).If left blank -> take all.")
+    parser.add_argument("--topk", type=int, default=10, help="Top-k good/bad weeks for export")
     args = parser.parse_args()
 
     ensure_dir(args.out_dir)
@@ -141,7 +141,7 @@ def main():
 
     summary_paths = sorted(glob.glob(os.path.join(args.interim_dir, f"*{SUMMARY_SUFFIX}")))
     if not summary_paths:
-        raise FileNotFoundError(f"Không tìm thấy *{SUMMARY_SUFFIX} trong {args.interim_dir}")
+        raise FileNotFoundError(f"*{SUMMARY_SUFFIX} not found in {args.interim_dir}")
 
     wanted = None
     if args.models:
