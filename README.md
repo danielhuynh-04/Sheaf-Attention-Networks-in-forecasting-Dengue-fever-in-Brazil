@@ -94,28 +94,28 @@ graph TD
     A3["IBGE Census (Demographics)"]
   end
 
-  subgraph "② Spatial Edge Engine [utils/step1_ & step2_]"
-    B1["Geospatial WGS84 Parsing\nQueen Contiguity + k-NN=6"]
-    B2["Extract 14 Epidemiologic Features\nJoin Climate, Demographics & Lags"]
+  subgraph "② Spatial Edge & Feature Engine [utils/step1_ & step2_]"
+    B1["Graph Topology Build (step1_build_edges.py)\nQueen Contiguity + k-NN=6 (16,382 Edges)"]
+    B2["Extract 14 Node Features (step2_build_features.py)\nJoin Climate, Demographics & Lags"]
     A1 --> B2 & A2 --> B2 & A3 --> B2
   end
 
   subgraph "③ Scaling & Tensor Serialization [utils/step3_scale_features.py]"
-    C1["log1p transformation (Skew control)"]
-    C2["Standard Scaler Z-score\n(node feature normalization)"]
-    C3["Serialize to PyTorch .pt snapshots"]
-    B1 --> C1 --> C2 --> C3
+    C1["log1p label transform & Z-score normalization"]
+    C2["Serialize Graph + Features to PyTorch .pt snapshots"]
+    B1 --> C1
+    B2 --> C1 --> C2
   end
 
-  subgraph "④ Tensor Integrity [utils/step4_check_scaled.py]"
+  subgraph "④ Tensor Integrity Check [utils/step4_check_scaled.py]"
     D1["Strict boolean masking\ntrain/val/test boundary enforcement"]
     D2["Automated edge symmetry check"]
-    C3 --> D1 --> D2
+    C2 --> D1 --> D2
   end
 
   style A1 fill:#003366,color:#fff,stroke:#002244
   style B1 fill:#336699,color:#fff,stroke:#113355
-  style C3 fill:#6699cc,color:#fff,stroke:#224466
+  style C2 fill:#6699cc,color:#fff,stroke:#224466
   style D2 fill:#336699,color:#fff,stroke:#113355
 ```
 
