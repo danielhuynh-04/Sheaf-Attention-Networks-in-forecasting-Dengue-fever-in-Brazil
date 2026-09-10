@@ -345,8 +345,24 @@ python run_global_gat.py --model sheaf_conn --eval_only 1 --export_predictions 1
 
 ---
 
+## 📑 Citation & Academic Reference
+
+If you use this research codebase or the Sheaf Attention Network implementation in your work, please cite the official thesis report:
+
+```bibtex
+@mastersthesis{huynh2026sheaf,
+  title={Sheaf Attention Networks (SheafAN) trong nghiên cứu phân tích dự đoán diễn biến dịch tễ bệnh truyền nhiễm sốt xuất huyết ở Brazil},
+  author={Huynh, Le Thanh Hai},
+  school={Ho Chi Minh City Open University (Khoa Đào tạo Đặc biệt)},
+  year={2026},
+  note={Official Student Science Research Project ID: 594. Awarded 4,500,000 VND Scholarship. Validated by Hospital for Tropical Diseases.}
+}
+```
+
+---
+
 <div align="center">
   <b>Huynh Le Thanh Hai</b><br>
-  Final-year Computer Science student, Ho Chi Minh City Open University (High-Quality 100% English Program)<br>
+  Student Principal Investigator • Ho Chi Minh City Open University (High-Quality Program - Khoa ĐTĐB)<br>
   <a href="mailto:Haiworkai@gmail.com">Haiworkai@gmail.com</a> • <a href="https://linkedin.com/in/le-thanh-hai-huynh-8353913a1">LinkedIn</a> • <a href="https://kaggle.com/lthanhhihunh">Kaggle</a>
 </div>
