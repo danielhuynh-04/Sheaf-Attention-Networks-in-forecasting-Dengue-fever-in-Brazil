@@ -88,6 +88,69 @@ Captures direction-aware, non-symmetric disease transmission using learned rotat
 
 ---
 
+## 🧠 Sheaf-Connection Neural Network Architecture (Mathematical Deep Dive)
+
+The winning architecture (**Sheaf-Connection Neural Network**, $R^2 = 0.966$) solves the non-homophily problem of epidemic transmission by learning directional, per-edge **Orthogonal Rotation Restriction Maps $R(\theta_{uv}) \in SO(2)$** over 2D Stalk Vector Spaces.
+
+```mermaid
+graph TD
+  subgraph "① Tensor Input Layer"
+    I1["Node Feature Matrix X\n[N x 14]"]
+    I2["Spatial Edge Index E_idx\n[2 x 16,382]"]
+    I3["Temporal Sequence T_seq\n[N x T x F_t]"]
+  end
+
+  subgraph "② Feature Projection & Temporal Fusion"
+    P1["Linear Input Projection W_in\nX -> H_node [N x H]"]
+    P2["Temporal Mean Pooling & LazyLinear W_temp\nmean(T_seq) -> H_temp [N x H]"]
+    P3["Feature Fusion & Non-Linear Activation\nH_0 = ReLU(H_node + H_temp) [N x H]"]
+    I1 --> P1
+    I3 --> P2
+    P1 & P2 --> P3
+  end
+
+  subgraph "③ Stalk Space Decomposition (S = H / 2)"
+    S1["Stalk Reshaping Operator\nH_0 -> h_u, h_v [E x S x 2]"]
+    P3 --> S1
+  end
+
+  subgraph "④ Per-Edge Restriction Map Generator [SO(2) Group]"
+    R1["Edge Feature Concatenation\nE_feat = [h_src || h_dst || |h_src - h_dst|] [E x 3H]"]
+    R2["Edge MLP (Linear -> ReLU -> Dropout -> Linear)\nE_feat -> Theta [E x S] (Rotation Angle per Stalk)"]
+    R3["Orthogonal Rotation Matrix Construction R(Theta)\n[cos(theta)  -sin(theta)]\n[sin(theta)   cos(theta)] [E x S x 2 x 2]"]
+    I2 --> R1
+    P3 --> R1 --> R2 --> R3
+  end
+
+  subgraph "⑤ Sheaf Topological Disagreement & Aggregation"
+    A1["Restriction Map Projection\nmapped_src = R(Theta) * h_src_stalk [E x S x 2]"]
+    A2["Topological Disagreement Tensor\nDelta_uv = mapped_src - h_dst_stalk [E x S x 2]"]
+    A3["Symmetric Index-Add Node Aggregation\nAgg_dst = index_add(dst, -Delta)\nAgg_src = index_add(src, Delta)\nAgg_final = 0.5 * (Agg_dst + Agg_src) [N x H]"]
+    S1 & R3 --> A1 --> A2 --> A3
+  end
+
+  subgraph "⑥ Residual Connection & Outbreak Head"
+    O1["Residual Addition & Layer Normalization\nH_1 = ReLU(LayerNorm(H_0 + Dropout(Agg_final))) [N x H]"]
+    O2["Multi-Layer Perceptron Regressor Head\nLinear -> ReLU -> Dropout -> Linear -> y_hat [N]"]
+    P3 & A3 --> O1 --> O2
+  end
+
+  subgraph "⑦ Optimization & MLOps Validation"
+    V1["Huber Loss Optimization (delta = 1.2)\n(Outlier Robustness against Epidemic Spikes)"]
+    V2["Duan Smearing Estimator E[exp(epsilon)]\n(Bias-Corrected expm1 Label Back-Transformation)"]
+    O2 --> V1 --> V2
+  end
+
+  style I1 fill:#003366,color:#fff,stroke:#002244
+  style P3 fill:#336699,color:#fff,stroke:#113355
+  style R3 fill:#6699cc,color:#fff,stroke:#224466
+  style A2 fill:#336699,color:#fff,stroke:#113355
+  style O2 fill:#003366,color:#fff,stroke:#002244
+  style V2 fill:#6699cc,color:#fff,stroke:#224466
+```
+
+---
+
 ## 📊 Data Engineering Pipeline
 
 ```mermaid
