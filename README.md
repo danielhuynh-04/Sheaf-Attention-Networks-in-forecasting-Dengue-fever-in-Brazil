@@ -20,8 +20,12 @@ _Student Principal Investigator: **Huynh Le Thanh Hai**_
 
 <div align="center">
   <br>
-  <b>📑 Official Research Documentation:</b><br>
-  <a href="./docs/Full_Research_Report_Topological_GNN.pdf">Download Full Research Report (PDF)</a>
+  <b>📑 Official Research Documentation:</b><br><br>
+  <a href="https://github.com/danielhuynh-04/Sheaf-Attention-Networks-in-forecasting-Dengue-fever-in-Brazil/raw/main/docs/Full_Research_Report_Topological_GNN.pdf" target="_blank">
+    <img src="https://img.shields.io/badge/Download-Full_Research_Report_(PDF)-red?style=for-the-badge&logo=adobeacrobatreader&logoColor=white" alt="Download PDF">
+  </a>
+  <br>
+  <small><i>Direct Mirror Link: <a href="./docs/Full_Research_Report_Topological_GNN.pdf">docs/Full_Research_Report_Topological_GNN.pdf</a></i></small>
 </div>
 
 ---
@@ -88,34 +92,41 @@ Captures direction-aware, non-symmetric disease transmission using learned rotat
 
 ```mermaid
 graph TD
-  subgraph "① Raw Data Ingestion (Mosqlimate)"
-    A1["SINAN/DATASUS (Dengue)"]
-    A2["ECMWF ERA5 (Climate)"]
-    A3["IBGE Census (Demographics)"]
+  subgraph "① Raw Data Ingestion & Source Files (Mosqlimate Project DOI: 10.5281/zenodo.13328231)"
+    A1["dengue_2024.csv\nSINAN / DATASUS\n(Sistema de Informação de Agravos de Notificação)\n• Epidemiological Weekly Dengue Incidence Cases"]
+    A2["Climate_2024.csv\nECMWF ERA5\n(European Centre for Medium-Range Weather Forecasts)\n• Min/Max/Mean Temp, Precipitation, Relative Humidity, NDVI"]
+    A3["IBGE_POPTCU.csv\nIBGE\n(Instituto Brasileiro de Geografia e Estatística)\n• Official Population Census & 7-digit IBGE Geocodes"]
+    A4["regic2018_clean.csv\nREGIC / IBGE\n(Regiões de Influência das Cidades)\n• Urban Hierarchy & Inter-municipal Migration Networks"]
+    A5["environ_vars.csv & WGS84 GeoJSON\n(Spatial Boundaries & Environment)\n• Biome Classification, Köppen Climate Zones, Centroid Coordinates"]
   end
 
   subgraph "② Spatial Edge & Feature Engine [utils/step1_ & step2_]"
-    B1["Graph Topology Build (step1_build_edges.py)\nQueen Contiguity + k-NN=6 (16,382 Edges)"]
-    B2["Extract 14 Node Features (step2_build_features.py)\nJoin Climate, Demographics & Lags"]
-    A1 --> B2 & A2 --> B2 & A3 --> B2
+    B1["Graph Topology Build (step1_build_edges.py)\nSpatial Queen Contiguity Adjacency + k-NN=6\n(16,382 Directed Spatial Edges across 5,564 Municipalities)"]
+    B2["Extract 14 Node Features (step2_build_features.py)\nJoin Climate, Demographics, Biomes & Lag-1 to Lag-4 Incidence Rates"]
+    A1 --> B2 & A2 --> B2 & A3 --> B2 & A4 --> B2 & A5 --> B2
   end
 
   subgraph "③ Scaling & Tensor Serialization [utils/step3_scale_features.py]"
-    C1["log1p label transform & Z-score normalization"]
-    C2["Serialize Graph + Features to PyTorch .pt snapshots"]
+    C1["log1p Label Transformation\n(Distribution Skew Suppression & Numerical Stabilization)"]
+    C2["Z-score Standard Normalization\n(Node Feature Scaling fitted on Train Split)"]
+    C3["Serialize Graph + Features to PyTorch .pt Snapshots\n(Weekly Temporal Snapshots with Train/Val/Test Boolean Masks)"]
     B1 --> C1
-    B2 --> C1 --> C2
+    B2 --> C1 --> C2 --> C3
   end
 
   subgraph "④ Tensor Integrity Check [utils/step4_check_scaled.py]"
-    D1["Strict boolean masking\ntrain/val/test boundary enforcement"]
-    D2["Automated edge symmetry check"]
-    C2 --> D1 --> D2
+    D1["Strict Temporal Boolean Masking\n(Train 2010–2020 / Val 2021–2022 / Test 2023–2024 Isolation)"]
+    D2["Automated Edge Symmetry & Zero Self-Loop Validation"]
+    C3 --> D1 --> D2
   end
 
   style A1 fill:#003366,color:#fff,stroke:#002244
+  style A2 fill:#003366,color:#fff,stroke:#002244
+  style A3 fill:#003366,color:#fff,stroke:#002244
+  style A4 fill:#003366,color:#fff,stroke:#002244
+  style A5 fill:#003366,color:#fff,stroke:#002244
   style B1 fill:#336699,color:#fff,stroke:#113355
-  style C2 fill:#6699cc,color:#fff,stroke:#224466
+  style C3 fill:#6699cc,color:#fff,stroke:#224466
   style D2 fill:#336699,color:#fff,stroke:#113355
 ```
 
