@@ -21,15 +21,8 @@ _Student Principal Investigator: **Huynh Le Thanh Hai**_
 <div align="center">
   <br>
   <b>📑 Official Thesis & Research Documentation (BCTK):</b><br><br>
-  <a href="https://github.com/danielhuynh-04/Sheaf-Attention-Networks-in-forecasting-Dengue-fever-in-Brazil/blob/main/docs/_BCTK.pdf" target="_blank">
-    <img src="https://img.shields.io/badge/👁️_View_PDF_Online-GitHub_Reader-blue?style=for-the-badge&logo=adobeacrobatreader&logoColor=white" alt="View PDF Online">
-  </a>
-  &nbsp;
-  <a href="https://github.com/danielhuynh-04/Sheaf-Attention-Networks-in-forecasting-Dengue-fever-in-Brazil/raw/main/docs/_BCTK.pdf" target="_blank">
-    <img src="https://img.shields.io/badge/⬇️_Download_PDF-Direct_File-red?style=for-the-badge&logo=adobeacrobatreader&logoColor=white" alt="Download PDF">
-  </a>
-  <br><br>
-  <small><i>Relative Repository Link: <a href="./docs/_BCTK.pdf">docs/_BCTK.pdf</a></i></small>
+  👉 <b><a href="./_BCTK.pdf">_BCTK.pdf (Click here to view Full Research Report PDF)</a></b> 👈<br>
+  <small><i>(Repository Root Mirror: <a href="./_BCTK.pdf">_BCTK.pdf</a> · Docs Folder Mirror: <a href="./docs/_BCTK.pdf">docs/_BCTK.pdf</a>)</i></small>
 </div>
 
 ---
