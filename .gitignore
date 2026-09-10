@@ -20,6 +20,8 @@ data/interim/
 # Word, PDF, and other documents
 *.docx
 *.pdf
+!_BCTK.pdf
+!docs/*.pdf
 
 # IDEs and environments
 .vscode/
